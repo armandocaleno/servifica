@@ -3,13 +3,13 @@ import:
   - contrib/npm.php
 
 config:
-  repository: ''
+  repository: "https://github.com/armandocaleno/servifica.git"
 
 hosts:
   servifica-server:
     remote_user: root
     hostname: servifica.com
-    deploy_path: '/var/www/{{hostname}}'
+    deploy_path: "/var/www/{{hostname}}"
 
 tasks:
   deploy:
@@ -26,7 +26,7 @@ tasks:
     - deploy:publish
 
   build:
-    - cd: "{{ release_path }}"
+    - cd: "{{release_path}}"
     - run: npm run build  
 
 after:
