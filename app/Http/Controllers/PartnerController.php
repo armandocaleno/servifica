@@ -10,7 +10,7 @@ class PartnerController extends Controller
 {           
     public function index()
     {        
-        return view('partners.index');
+        return view('partners.index2');
     }
 
     public function create()
