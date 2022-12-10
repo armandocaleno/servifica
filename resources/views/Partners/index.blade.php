@@ -6,6 +6,6 @@
     </x-slot>
 
     @section('body')
-        @livewire('partners.index')   
+        {{-- @livewire('partners.index')    --}}
     @endsection
 </x-app-layout>
