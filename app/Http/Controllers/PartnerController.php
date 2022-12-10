@@ -10,14 +10,14 @@ class PartnerController extends Controller
 {           
     public function index()
     {        
-        return view('Partners.index');
+        return view('partners.index');
     }
 
     public function create()
     {        
         $partner = new Partner();                
         
-        return view('Partners.create', compact('partner'));
+        return view('partners.create', compact('partner'));
     }
 
     public function store(Request $request)
