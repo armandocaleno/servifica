@@ -144,7 +144,7 @@ class TransactionController extends Controller
         $partners = Partner::all();
         $transaction = new Transaction();
 
-        return view('Transactions.create', compact('partners', 'transaction'));
+        return view('transactions.create', compact('partners', 'transaction'));
     }    
 
     public function edit($transaction_id)
@@ -153,12 +153,12 @@ class TransactionController extends Controller
 
         $transaction = Transaction::find($transaction_id);
         
-        return view('Transactions.create', compact('partners', 'transaction'));
+        return view('transactions.create', compact('partners', 'transaction'));
     }    
 
     public function lotes()
     {        
-       return view('Transactions.lotes'); 
+       return view('transactions.lotes'); 
     }
 
     //Generar el número de transacción
@@ -206,6 +206,6 @@ class TransactionController extends Controller
         $partners = Partner::all();
         $transaction = new Transaction();
 
-        return view('Transactions.payment', compact('partners', 'transaction'));
+        return view('transactions.payment', compact('partners', 'transaction'));
     }
 }

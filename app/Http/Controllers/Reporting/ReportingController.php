@@ -302,7 +302,7 @@ class ReportingController extends Controller
 
     public function partners()
     {
-        return view('Reporting.partners');
+        return view('reporting.partners');
     }
 
     public function partnersReporting(Request $request)

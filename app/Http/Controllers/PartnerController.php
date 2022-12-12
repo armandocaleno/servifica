@@ -10,7 +10,7 @@ class PartnerController extends Controller
 {           
     public function index()
     {        
-        return view('partners.index2');
+        return view('partners.index');
     }
 
     public function create()
@@ -47,7 +47,7 @@ class PartnerController extends Controller
 
     public function edit(Partner $partner)
     {
-        return view('Partners.edit', compact('partner'));
+        return view('partners.edit', compact('partner'));
     }
 
     public function update(Request $request)
