@@ -18,7 +18,7 @@
             <select id="partner_select" class="shadow-md z-10 w-full" wire:model="transaction.partner_id">
                 <option value="-1"></option>
                 @foreach ($partners as $partner)
-                    <option value="{{ $partner->id }}">{{ $partner->name }}</option>
+                    <option value="{{ $partner->id }}">{{ $partner->name }} {{ $partner->lastname }}</option>
                 @endforeach
             </select>                     
         </div>
