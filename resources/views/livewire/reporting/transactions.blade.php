@@ -136,7 +136,7 @@
                                         {{ $item->reference }}
                                     </td>
 
-                                    <td class="row">
+                                    <td class="row whitespace-nowrap">
                                         $ {{ $item->total }}
                                     </td>                                    
                                 </tr>
