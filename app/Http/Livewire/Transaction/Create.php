@@ -7,6 +7,7 @@ use App\Models\Partner;
 use App\Models\Transaction;
 use Carbon\Carbon;
 use Gloudemans\Shoppingcart\Facades\Cart;
+use Illuminate\Support\Arr;
 use Livewire\Component;
 use PDF;
 
@@ -267,7 +268,7 @@ class Create extends Component
     public function generatevoucher($id)
     {
         $this->confirmingVoucher = false;
-        // Cart::destroy(); //borrar corrito
+        // Cart::destroy(); //borrar carrito
         $transaction = Transaction::find($id); //obtiene la transacción 
         $transaction->date = Carbon::parse($transaction->date)->format('d/m/Y'); //formatea la fecha       
             
