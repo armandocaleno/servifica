@@ -91,7 +91,7 @@
                                     </td>
 
                                     <td class="row whitespace-nowrap">                                        
-                                        {{ $item->partner->name }} {{ $item->lastname }}                                                                              
+                                        {{ $item->partner->name }} {{ $item->partner->lastname }}                                                                              
                                     </td>           
                                     
                                     <td class="row whitespace-nowrap">
