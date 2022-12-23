@@ -270,6 +270,7 @@ class Create extends Component
         $this->confirmingVoucher = false;
         // Cart::destroy(); //borrar carrito
         $transaction = Transaction::find($id); //obtiene la transacción 
+        Arr::sort($transaction->voucher);
         $transaction->date = Carbon::parse($transaction->date)->format('d/m/Y'); //formatea la fecha       
             
         //genera el pdf con el contenido de la transacción
