@@ -1,5 +1,4 @@
-<div>    
-
+<div>
     <div class=" bg-gray-50 border-2 px-4 pt-2 pb-6 mb-4">
         <form action="{{ route('reporting.transactions.generate') }}" method="post" target="_blank">
         @csrf
@@ -17,19 +16,6 @@
                     <x-jet-label value="Hasta" />                
                     <input type="date" name="to" class="block py-0 rounded border-gray-400 w-full text-gray-700" wire:model="to_date" >
                 </div>
-
-                {{-- types --}}
-                <div class="">
-                    <x-jet-label for="type_id" value="Tipo"/>
-                    <div>
-                        <select name="type_id" class="py-0 rounded border-gray-400 w-full text-gray-600" wire:model="type">
-                            <option value="0">Todas</option>
-                            <option value="1">Individual</option>
-                            <option value="2">Lotes</option>
-                            <option value="3">Pago</option>
-                        </select> 
-                    </div>                                                    
-                </div> 
 
                 {{-- Partners --}}
                 <div class="">
@@ -79,6 +65,9 @@
         <div class="-my-2 py-2 overflow-x-auto lg:-mx-8 lg:px-8">
             <div class="align-middle inline-block min-w-full shadow overflow-hidden sm:rounded-lg border-b border-gray-200">                                                                                      
                 <table class="min-w-full border">
+                    {{-- @php
+                            $total = 0;
+                        @endphp --}}
                     <thead>
                         <tr>                                
                             <th class="thead">
@@ -98,11 +87,7 @@
                             </th>
 
                             <th class="thead">
-                                Rubros                               
-                            </th>
-
-                            <th class="thead">
-                                Referencia                                   
+                                Rubro                               
                             </th>
 
                             <th class="thead">
@@ -113,20 +98,21 @@
 
                     <tbody class="bg-white">
                         @if (count($transactions))  
+                        
                             @foreach ($transactions as $item)
                                 <tr>
                                     <td class="row">
-                                        {{ $item->number }}
+                                        {{ $item['number'] }}
                                     </td>
                                     
                                     <td class="row whitespace-nowrap">
-                                        {{ \Carbon\Carbon::parse($item->date)->format('d-m-Y') }}
+                                        {{ \Carbon\Carbon::parse($item['date'])->format('d-m-Y') }}
                                     </td>
 
                                     <td class="row">
-                                        @if ($item->type == 1)
+                                        @if ($item['type'] == 1)
                                             Individual
-                                        @elseif ($item->type == 1)
+                                        @elseif ($item['type'] == 1)
                                             Lotes
                                         @else
                                             Pago
@@ -134,23 +120,15 @@
                                     </td>
 
                                     <td class="row whitespace-nowrap">                                       
-                                        {{ $item->partner->name }} {{ $item->partner->lastname }}                                          
+                                        {{ $item['partner_name'] }} {{ $item['partner_lastname'] }}                                          
                                     </td>  
                                     
                                     <td class="row whitespace-nowrap">
-                                        <ul>
-                                            @foreach ($item->content as $i)
-                                                <li class=" flex justify-between">{{ $i['name'] }} = <span>{{ number_format($i['price'], 2) }}</span></li>
-                                            @endforeach
-                                        </ul>
-                                    </td>
-
-                                    <td class="row">
-                                        {{ $item->reference }}
+                                        {{ $item['account'] }}
                                     </td>
 
                                     <td class="row whitespace-nowrap">
-                                        $ {{ $item->total }}
+                                        $ {{ $item['value'], 2 }}
                                     </td>                                    
                                 </tr>
                             @endforeach  
@@ -164,6 +142,13 @@
                             </tr>                            
                         @endif                                                  
                     </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="6" class=" text-right pr-4">
+                                Total = $ {{ $total }}
+                            </td>
+                        </tr>
+                    </tfoot>
                 </table>                
             </div>
         </div>                            

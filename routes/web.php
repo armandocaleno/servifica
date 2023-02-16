@@ -65,6 +65,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     // Route::post('reportes/transacciones/pdf', [ReportingController::class, 'transactions_pdf'])->name('reporting.transactions.pdf');
     Route::get('reportes/socios', [ReportingController::class, 'partners'])->name('reporting.partners');
     Route::post('reportes/socios/generar', [ReportingController::class, 'partnersReporting'])->name('reporting.partners.generate');
+    Route::get('reportes/cuentas', [ReportingController::class, 'accounts'])->name('reporting.accounts');
 
     //Empresas
     Route::get('empresas/index', [CompanyController::class, 'index'])->name('companies.index');

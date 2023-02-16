@@ -388,4 +388,9 @@ class ReportingController extends Controller
         $writer->save('php://output'); //descarga el archivo
 
     }
+
+    public function accounts()
+    {
+        return view('reporting.accounts');
+    }
 }
