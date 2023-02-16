@@ -35,7 +35,7 @@ class TotalAccounts extends Component
             ->where('transactions.company_id', session('company')->id)   
             ->whereBetween('date', [$this->from_date, $this->to_date])
             ->partner($this->partner_id)                      
-            ->orderBy('date')->paginate(10); 
+            ->orderBy('date')->get(); 
         } else {
             $trans = Transaction::join('partners', 'partners.id', 'transactions.partner_id')
             ->select(['transactions.*', 'partners.name'])
@@ -43,7 +43,7 @@ class TotalAccounts extends Component
             ->whereBetween('date', [$this->from_date, $this->to_date])
             ->where('type', $this->type)
             ->partner($this->partner_id)                      
-            ->orderBy('date')->paginate(10); 
+            ->orderBy('date')->get(); 
         }
 
         foreach ($trans as $value) {
