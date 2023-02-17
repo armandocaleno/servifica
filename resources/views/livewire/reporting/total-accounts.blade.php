@@ -1,6 +1,6 @@
 <div>
     <div class=" bg-gray-50 border-2 px-4 pt-2 pb-6 mb-4">
-        <form action="{{ route('reporting.transactions.generate') }}" method="post" target="_blank">
+        <form action="{{ route('reporting.accounts.generate') }}" method="post" target="_blank">
         @csrf
         
             {{-- filters --}}
@@ -65,13 +65,11 @@
         <div class="-my-2 py-2 overflow-x-auto lg:-mx-8 lg:px-8">
             <div class="align-middle inline-block min-w-full shadow overflow-hidden sm:rounded-lg border-b border-gray-200">                                                                                      
                 <table class="min-w-full border">
-                    {{-- @php
-                            $total = 0;
-                        @endphp --}}
+                    
                     <thead>
                         <tr>                                
                             <th class="thead">
-                                Número                                
+                                Trans. #                                
                             </th>
 
                             <th class="thead">
@@ -128,7 +126,7 @@
                                     </td>
 
                                     <td class="row whitespace-nowrap">
-                                        $ {{ $item['value'], 2 }}
+                                        $ {{ number_format(floatVal($item['value']), 2) }}
                                     </td>                                    
                                 </tr>
                             @endforeach  

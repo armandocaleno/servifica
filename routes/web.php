@@ -66,7 +66,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('reportes/socios', [ReportingController::class, 'partners'])->name('reporting.partners');
     Route::post('reportes/socios/generar', [ReportingController::class, 'partnersReporting'])->name('reporting.partners.generate');
     Route::get('reportes/cuentas', [ReportingController::class, 'accounts'])->name('reporting.accounts');
-
+    Route::match(['get', 'post'],'reportes/cuentas/generar', [ReportingController::class, 'accountsReporting'])->name('reporting.accounts.generate');
     //Empresas
     Route::get('empresas/index', [CompanyController::class, 'index'])->name('companies.index');
     Route::get('empresas/create', [CompanyController::class, 'create'])->name('companies.create');

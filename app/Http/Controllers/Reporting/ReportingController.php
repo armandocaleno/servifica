@@ -202,9 +202,9 @@ class ReportingController extends Controller
             $sheet->setCellValue('A'.$key+5, $value->number);           
                         
             $sheet->setCellValue('B'.$key+5, Carbon::parse($value->date)->format('d/m/Y'));
-            if ($value->number == 1) {
+            if ($value->type_id == 1) {
                 $sheet->setCellValue('C'.$key+5, 'Individual');
-            }elseif ($value->number == 2) {
+            }elseif ($value->type_id == 2) {
                 $sheet->setCellValue('C'.$key+5, 'Lotes');
             } else {
                 $sheet->setCellValue('C'.$key+5, 'Pago');
@@ -392,5 +392,176 @@ class ReportingController extends Controller
     public function accounts()
     {
         return view('reporting.accounts');
+    }
+
+    public function accountsReporting(Request $request)
+    {
+        $transactions = [];
+        $total = 0;
+        $partner = "Todos";
+
+        if ($request->partner_id) {
+            $p = Partner::find($request->partner_id);
+            $partner = $p->name . " ". $p->lastname;
+        }
+
+        
+            $desde = Carbon::parse($request->from)->format('d/m/Y');
+            $hasta = Carbon::parse($request->to)->format('d/m/Y');
+            
+            if ($request->type_id == 0) {
+                $trans = Transaction::join('partners', 'partners.id', 'transactions.partner_id')
+                                            ->select(['transactions.*', 'partners.name'])
+                                            ->where('transactions.company_id', session('company')->id)       
+                                            ->whereBetween('date', [$request->from, $request->to])  
+                                            ->partner($request->partner_id)                      
+                                            ->orderBy('date')->get();
+            } else {
+                $trans = Transaction::join('partners', 'partners.id', 'transactions.partner_id')
+                                            ->select(['transactions.*', 'partners.name'])
+                                            ->where('transactions.company_id', session('company')->id) 
+                                            ->whereBetween('date', [$request->from, $request->to])  
+                                            ->where('type', $request->type_id)
+                                            ->partner($request->partner_id)                      
+                                            ->orderBy('date')->get();
+            }
+            
+            foreach ($trans as $value) {
+                foreach ($value->content as $c) {
+                    if ($request->account_id != "") {
+                        if ($c['id'] == $request->account_id) {
+                            $transactions[] = [
+                                'number' => $value->number,
+                                'date' => $value->date,
+                                'partner_name' => $value->partner->name,
+                                'partner_lastname' => $value->partner->lastname,
+                                'account' => $c['name'],
+                                'value' => $c['price'],
+                                'type' => $value->type,
+                            ];
+                            $total += $c['price'];
+                        }
+                    }
+                }
+            }
+        if ($request->type == "pdf") {
+            //genera el pdf con el contenido de la transacción
+            $pdf = PDF::loadView('reporting.accounts-pdf', ['transactions' => $transactions, 'from' => $desde, 'to' => $hasta, 'partner' => $partner, 'total' => $total])->setPaper('a4', 'landscape');    
+            //muestra el pdf    
+            return $pdf->stream(); 
+        } else {
+            $this->accounts_excel($request, $transactions, $partner, $total);
+        }        
+    }
+
+    public function accounts_excel(Request $request, $transactions, $partner, $total)
+    {
+        
+        $desde = Carbon::parse($request->from)->format('d/m/Y');
+        $hasta = Carbon::parse($request->to)->format('d/m/Y');
+
+        //instancia el archivo de excel
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Reporte de cuentas'); //título de página               
+
+        //arreglo de estilos
+        $styleArray = [
+            'font' => [
+                'bold' => true,
+            ],           
+            'alignment' => [
+                'wrapText' => true
+            ],            
+        ];
+ 
+        $sheet->getStyle("A1")->applyFromArray($styleArray);              
+        $sheet->setCellValue('A1', 'DESDE');                    
+        $sheet->setCellValue('B1', $desde);
+
+        $sheet->getStyle("A2")->applyFromArray($styleArray);              
+        $sheet->setCellValue('A2', 'HASTA');                      
+        $sheet->setCellValue('B2', $hasta);
+
+        $sheet->getStyle("A3")->applyFromArray($styleArray);              
+        $sheet->setCellValue('A3', 'SOCIO');                
+        $sheet->setCellValue('B3', $partner);
+
+        $sheet->getStyle("A4")->applyFromArray($styleArray);
+        $sheet->getColumnDimension('A')->setWidth(15);
+        $sheet->getStyle('A')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->setCellValue('A4', 'TRANS. #');
+
+        $sheet->getStyle("B4")->applyFromArray($styleArray);
+        $sheet->getColumnDimension('B')->setWidth(15);
+        $sheet->getStyle('B')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->setCellValue('B4', 'FECHA');
+
+        $sheet->getStyle("C4")->applyFromArray($styleArray);
+        $sheet->getColumnDimension('C')->setWidth(15);
+        $sheet->getStyle('C')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->setCellValue('C4', 'TIPO');
+
+        $sheet->getStyle("D4")->applyFromArray($styleArray);
+        $sheet->getColumnDimension('D')->setWidth(30);
+        $sheet->getStyle('D')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->setCellValue('D4', 'SOCIO');
+
+        $sheet->getStyle("E4")->applyFromArray($styleArray);
+        $sheet->getColumnDimension('E')->setWidth(30);
+        $sheet->getStyle('E')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->setCellValue('E4', 'CUENTA');
+
+    //  $sheet->getStyle("F4")->applyFromArray($styleArray);
+    //  $sheet->getColumnDimension('F')->setWidth(20);
+    //  $sheet->getStyle('F')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+    //  $sheet->setCellValue('F4', 'REFERENCIA');
+
+        $sheet->getStyle("F4")->applyFromArray($styleArray);
+        $sheet->getColumnDimension('F')->setWidth(15);
+        $sheet->getStyle('F')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->setCellValue('F4', 'VALOR');
+         
+        $last_row = 0;
+        foreach ($transactions as $key => $value) {            
+            $sheet->setCellValue('A'.$key+5, $value['number']);           
+                        
+            $sheet->setCellValue('B'.$key+5, Carbon::parse($value['date'])->format('d/m/Y'));
+            if ($value['type'] == 1) {
+                $sheet->setCellValue('C'.$key+5, 'Individual');
+            }elseif ($value['type'] == 2) {
+                $sheet->setCellValue('C'.$key+5, 'Lotes');
+            } else {
+                $sheet->setCellValue('C'.$key+5, 'Pago');
+            }
+                                    
+            $sheet->setCellValue('D'.$key+5, $value['partner_name'] ." ". $value['partner_lastname']);
+            
+            $sheet->getStyle('E')->getAlignment()->setWrapText(true);
+            $sheet->setCellValue('E'.$key+5, $value['account']);
+            
+        //  $sheet->setCellValue('F'.$key+5, $value->reference);
+
+            $sheet->getStyle('F'.$key+5)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
+            $sheet->setCellValue('F'.$key+5, $value['value']);
+            $last_row = $key+5;
+        }
+
+        $sheet->getStyle('E'.$last_row+1)->applyFromArray($styleArray);
+        $sheet->setCellValue('E'.$last_row+1, "TOTAL");
+        $sheet->getStyle('F'.$last_row+1)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
+        $sheet->setCellValue('F'.$last_row+1, $total);
+ 
+        //nombre del archivo excel
+        $file ="reporte_cuentas_".date('dmYHi').".xlsx";
+
+        //cabeceras para archivos xlsx
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="'.$file.'"');
+        header('Cache-Control: max-age=0');       
+
+        //escribe el contenido en el archivo xlsx
+        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer->save('php://output'); //descarga el archivo
     }
 }
