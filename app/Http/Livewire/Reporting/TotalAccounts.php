@@ -19,6 +19,7 @@ class TotalAccounts extends Component
         
         $this->partner_id = "";
         $this->account_id = "";
+        $this->type = 1;
         $this->total = 0;
     }
 
