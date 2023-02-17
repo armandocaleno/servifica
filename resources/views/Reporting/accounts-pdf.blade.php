@@ -93,7 +93,14 @@
                         <td class="px-2 whitespace-no-wrap text-right">$ {{ number_format(floatVal($item['value']), 2) }}</td>   
                     </tr>
                 @endforeach
-            </tbody>        
+            </tbody> 
+            <tfoot>
+                <tr>
+                    <td colspan="6" class=" text-right">
+                        Total = $ {{ $total }}
+                    </td>
+                </tr>
+            </tfoot>       
         </table>    
     </div>    
 </body>

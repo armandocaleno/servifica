@@ -17,6 +17,18 @@
                     <input type="date" name="to" class="block py-0 rounded border-gray-400 w-full text-gray-700" wire:model="to_date" >
                 </div>
 
+                {{-- types --}}
+                <div class="">
+                    <x-jet-label for="type_id" value="Tipo"/>
+                    <div>
+                        <select name="type_id" class="py-0 rounded border-gray-400 w-full text-gray-600" wire:model="type">
+                            <option value="1" selected>Individual</option>
+                            <option value="2">Lotes</option>
+                            <option value="3">Pago</option>
+                        </select> 
+                    </div>                                                    
+                </div> 
+
                 {{-- Partners --}}
                 <div class="">
                     <x-jet-label for="partner" value="Socio"/>
