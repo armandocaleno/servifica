@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AccountingController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\Reporting\ReportingController;
 use App\Http\Controllers\SelectCompanyController;
@@ -73,4 +74,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('empresas/store', [CompanyController::class, 'store'])->name('companies.store');
     Route::get('empresas/{company}/edit/', [CompanyController::class, 'edit'])->name('companies.edit');
     Route::post('empresas/update', [CompanyController::class, 'update'])->name('companies.update');    
+
+    // Plan de cuentas
+    Route::get('plan-de-cuentas/index', [AccountingController::class, 'index'])->name('plan.index');
 });
