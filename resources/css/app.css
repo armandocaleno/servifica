@@ -9,3 +9,17 @@
 .row{
     @apply px-6 py-2 border-b border-gray-200 leading-5 text-gray-500 text-sm;
 }
+
+#main_accounting{
+    @apply leading-8;
+}
+
+#main_accounting li{
+    @apply leading-6 border-b uppercase text-sm;
+}
+.listree-submenu-heading{cursor:pointer}
+.listree-submenu-heading{@apply hover:text-blue-950 hover:text-opacity-80 hover:font-semibold}
+li.listree-submenu-heading.collapsed:before{content:"\f138";padding-right:4px;font-family: "Font Awesome 5 Free";font-weight:900}
+li.listree-submenu-heading.expanded:before{content:"\f13a";padding-right:4px;font-family: "Font Awesome 5 Free";font-weight:900}
+ul.listree-submenu-items{list-style:none;border-left:1px dashed black;white-space:nowrap;margin-left:8px; padding-left: 20px}
+.accounting-code{@apply font-semibold text-blue-950 mr-4; }

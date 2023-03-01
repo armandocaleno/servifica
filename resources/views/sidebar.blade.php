@@ -79,7 +79,54 @@
                     </a> 
                 </div>
             </div>
-        </div>       
+        </div>     
+        
+        {{-- Menú contabilidad --}}
+        <div class="flex flex-col">
+            <a onclick="showMenu5(true)" class="flex items-center justify-between py-2 mt-2 text-gray-300 hover:bg-gray-700 hover:bg-opacity-25 hover:text-gray-100" href="#">
+                <div class="flex">                                       
+                    <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="24" height="24" viewBox="0 0 172 172">
+                        <g transform="translate(0.516,0.516) scale(0.994,0.994)">
+                        <g fill="none" fill-rule="nonzero" stroke="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="none" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0" font-family="none" font-weight="none" font-size="none" text-anchor="none" style="mix-blend-mode: normal">
+                        <g fill="currentColor" stroke="currentColor" stroke-linejoin="round">
+                            <path d="M43,100.33333c0,4.04938 3.11728,7.16667 7.16667,7.16667h100.33333v14.33333h-100.33333c-11.78895,0 -21.5,-9.71105 -21.5,-21.5v-71.63867l-14.23535,0.06999l-0.06999,-14.33333l28.63867,-0.12598zM143.33333,21.5v43h-7.16667v28.66667h-78.83333v-43h14.33333v-28.66667zM86,50.16667h43v-14.33333h-43zM71.66667,78.83333h50.16667v-14.33333h-50.16667zM71.66667,143.33333c0,7.91608 -6.41725,14.33333 -14.33333,14.33333c-7.91608,0 -14.33333,-6.41725 -14.33333,-14.33333c0,-7.91608 6.41725,-14.33333 14.33333,-14.33333c7.91608,0 14.33333,6.41725 14.33333,14.33333zM143.33333,143.33333c0,7.91608 -6.41725,14.33333 -14.33333,14.33333c-7.91608,0 -14.33333,-6.41725 -14.33333,-14.33333c0,-7.91608 6.41725,-14.33333 14.33333,-14.33333c7.91608,0 14.33333,6.41725 14.33333,14.33333z"></path></g><path d="M0,172v-172h172v172z" fill="none" stroke="none" stroke-linejoin="miter"></path><g fill="currentColor" stroke="none" stroke-linejoin="miter"><path d="M43,14.30534l-28.63867,0.12598l0.06999,14.33333l14.23535,-0.06999v71.63867c0,11.78895 9.71105,21.5 21.5,21.5h100.33333v-14.33333h-100.33333c-4.04938,0 -7.16667,-3.11728 -7.16667,-7.16667zM71.66667,21.5v28.66667h-14.33333v43h78.83333v-28.66667h7.16667v-43zM86,35.83333h43v14.33333h-43zM71.66667,64.5h50.16667v14.33333h-50.16667zM57.33333,129c-7.91608,0 -14.33333,6.41725 -14.33333,14.33333c0,7.91608 6.41725,14.33333 14.33333,14.33333c7.91608,0 14.33333,-6.41725 14.33333,-14.33333c0,-7.91608 -6.41725,-14.33333 -14.33333,-14.33333zM129,129c-7.91608,0 -14.33333,6.41725 -14.33333,14.33333c0,7.91608 6.41725,14.33333 14.33333,14.33333c7.91608,0 14.33333,-6.41725 14.33333,-14.33333c0,-7.91608 -6.41725,-14.33333 -14.33333,-14.33333z"></path></g><path d="" fill="currentColor" stroke="none" stroke-linejoin="miter"></path>
+                        </g>
+                        </g>
+                    </svg>                    
+                    <span class="mx-3">Contabilidad</span>
+                </div>
+            
+                <svg id="icon5" class="transform rotate-180" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </a>
+            
+            <div id="menu5" class="hidden flex flex-col w-full pb-1 bg-gray-700 border-r-4 bg-opacity-40 border-orange-400">
+                <div class="">
+                                                          
+                    <a href="{{ route('accounting.index') }}" class="flex items-center space-x-6 pl-10 hover:text-white focus:bg-gray-700 focus:text-white hover:bg-gray-700 hover:bg-opacity-25 text-gray-300 rounded py-1 w-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512" style=" fill:currentColor;">                            
+                            <path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z"/>
+                        </svg>
+                        <p class="text-base leading-4">Plan de cuentas</p>
+                    </a>                             
+                                                                                                              
+                    {{-- <a href="{{ route('transactions.lotes') }}" class="flex items-center space-x-6 pl-10 hover:text-white focus:bg-gray-700 focus:text-white hover:bg-gray-700 hover:bg-opacity-25 text-gray-300 rounded px-3 py-1 w-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="24" height="24" viewBox="0 0 172 172" style=" fill:currentColor;">
+                            <path d="M93.16667,21.5v86h14.33333l-21.5,21.5l-21.5,-21.5h14.33333v-86zM50.16667,47.19922v31.63411h14.33333l-21.5,21.5l-21.5,-21.5h14.33333v-25.69922l-19.40039,-19.40039l10.13411,-10.13411zM155.56706,33.73372l-19.40039,19.40039v25.69922h14.33333l-21.5,21.5l-21.5,-21.5h14.33333v-31.63411l23.59961,-23.59961zM28.66667,121.83333v21.5h114.66667v-21.5h14.33333v21.5c0,7.83362 -6.49972,14.33333 -14.33333,14.33333h-114.66667c-7.83362,0 -14.33333,-6.49972 -14.33333,-14.33333v-21.5z"></path>
+                        </svg>
+                        <p class="text-base leading-4">Por lotes</p>
+                    </a>   
+                    
+                    <a href="{{ route('transactions.payment.create') }}" class="flex items-center space-x-6 pl-10 hover:text-white focus:bg-gray-700 focus:text-white hover:bg-gray-700 hover:bg-opacity-25 text-gray-300 rounded px-3 py-1 w-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 576 512" style=" fill:currentColor;">
+                            <path d="M64 64C28.7 64 0 92.7 0 128V384c0 35.3 28.7 64 64 64H512c35.3 0 64-28.7 64-64V128c0-35.3-28.7-64-64-64H64zm64 320H64V320c35.3 0 64 28.7 64 64zM64 192V128h64c0 35.3-28.7 64-64 64zM448 384c0-35.3 28.7-64 64-64v64H448zm64-192c-35.3 0-64-28.7-64-64h64v64zM400 256c0 61.9-50.1 112-112 112s-112-50.1-112-112s50.1-112 112-112s112 50.1 112 112zM252 208c0 9.7 6.9 17.7 16 19.6V276h-4c-11 0-20 9-20 20s9 20 20 20h24 24c11 0 20-9 20-20s-9-20-20-20h-4V208c0-11-9-20-20-20H272c-11 0-20 9-20 20z"/>
+                        </svg>
+                        <p class="text-base leading-4">Pagos</p>
+                    </a>  --}}
+                </div>
+            </div>
+        </div> 
 
         {{-- Menú reportes --}}
         <div class="flex flex-col">
@@ -203,9 +250,15 @@
                 menu1.classList.toggle("hidden");
 
                 // Oculta los demás submenús abiertos
-                menu2.classList.add("hidden");
-                menu3.classList.add("hidden");
-                menu4.classList.add("hidden");
+                if (menu2 !== null) {
+                    menu2.classList.add("hidden");
+                }
+                if (menu3 !== null) {
+                    menu3.classList.add("hidden");
+                }
+                if (menu4 !== null) {
+                    menu4.classList.add("hidden");
+                }
             }
         };
 
@@ -217,9 +270,15 @@
                 menu2.classList.toggle("hidden");
 
                 // Oculta los demás submenús abiertos
-                menu1.classList.add("hidden");
-                menu3.classList.add("hidden");
-                menu4.classList.add("hidden");
+                if (menu1 !== null) {
+                    menu1.classList.add("hidden");
+                }
+                if (menu3 !== null) {
+                    menu3.classList.add("hidden");
+                }
+                if (menu4 !== null) {
+                    menu4.classList.add("hidden");
+                }
             }
         };
 
@@ -231,9 +290,15 @@
                 menu3.classList.toggle("hidden");
 
                 // Oculta los demás submenús abiertos
-                menu2.classList.add("hidden");
-                menu1.classList.add("hidden");
-                menu4.classList.add("hidden");
+                if (menu2 !== null) {
+                    menu2.classList.add("hidden");
+                }
+                if (menu4 !== null) {
+                    menu4.classList.add("hidden");
+                }
+                if (menu1 !== null) {
+                    menu1.classList.add("hidden");
+                }
             }
         };
 
@@ -245,9 +310,38 @@
                 menu4.classList.toggle("hidden");
 
                 // Oculta los demás submenús abiertos
-                menu2.classList.add("hidden");
-                menu3.classList.add("hidden");
-                menu1.classList.add("hidden");
+                if (menu2 !== null) {
+                    menu2.classList.add("hidden");
+                }
+                if (menu3 !== null) {
+                    menu3.classList.add("hidden");
+                }
+                if (menu1 !== null) {
+                    menu1.classList.add("hidden");
+                }
+            }
+        };
+
+        let icon5 = document.getElementById("icon5");
+        let menu5 = document.getElementById("menu5");
+        const showMenu5 = (flag) => {
+            if (flag) {
+                icon5.classList.toggle("rotate-180");
+                menu5.classList.toggle("hidden");
+
+                // Oculta los demás submenús abiertos
+                if (menu2 !== null) {
+                    menu2.classList.add("hidden");
+                }
+                if (menu3 !== null) {
+                    menu3.classList.add("hidden");
+                }
+                if (menu1 !== null) {
+                    menu1.classList.add("hidden");
+                }
+                if (menu4 !== null) {
+                    menu4.classList.add("hidden");
+                }
             }
         };
     </script>

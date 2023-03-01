@@ -9,8 +9,12 @@ class Accounting extends Model
 {
     use HasFactory;
 
-    const SI = 1;
-    const NO = 0;
+    protected $guarded = ['id', 'created_at', 'updated_at'];
+
+    const SI = "1";
+    const NO = "0";
+
+    public static $is_group = [self::SI, self::NO];
 
     //Relación uno a muchos
     public function classes()

@@ -76,5 +76,8 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('empresas/update', [CompanyController::class, 'update'])->name('companies.update');    
 
     // Plan de cuentas
-    Route::get('plan-de-cuentas/index', [AccountingController::class, 'index'])->name('plan.index');
+    Route::get('plan-de-cuentas/index', [AccountingController::class, 'index'])->name('accounting.index');
+    Route::get('plan-de-cuentas/create', [AccountingController::class, 'create'])->name('accounting.create');
+    Route::post('plan-de-cuentas/store', [AccountingController::class, 'store'])->name('accounting.store');
+    Route::get('plan-de-cuentas/edit/{accounting}', [AccountingController::class, 'edit'])->name('accounting.edit');
 });
