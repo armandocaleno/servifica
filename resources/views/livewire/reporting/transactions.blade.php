@@ -164,6 +164,13 @@
                             </tr>                            
                         @endif                                                  
                     </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="7" class=" text-right pr-4">
+                                Total = $ {{ $total }}
+                            </td>
+                        </tr>
+                    </tfoot>
                 </table>                
             </div>
         </div>                            

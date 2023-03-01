@@ -15,7 +15,7 @@ class Transactions extends Component
 {
     use WithPagination;
 
-    public $from_date, $to_date, $partner_id, $type, $account_id;
+    public $from_date, $to_date, $partner_id, $type, $account_id, $total;
 
     public function mount()
     {                      
@@ -24,6 +24,7 @@ class Transactions extends Component
         
         $this->partner_id = "";
         $this->account_id = "";
+        $this->total = 0;
     }
 
     public function updatedFromDate()
@@ -48,6 +49,7 @@ class Transactions extends Component
 
     public function render()
     {
+        $this->total = 0;
         $partners = Partner::where('status', Partner::ACTIVO)->get();    
         $accounts = Account::all();              
         $transactions = [];
@@ -78,6 +80,7 @@ class Transactions extends Component
                 }else {
                     $transactions[] = $value;
                 }
+                $this->total += $value['total'];
             }
         }
         // dd($transactions);
