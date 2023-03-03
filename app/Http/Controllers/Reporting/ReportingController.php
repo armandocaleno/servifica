@@ -198,13 +198,15 @@ class ReportingController extends Controller
         $sheet->getStyle('G')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->setCellValue('G4', 'TOTAL');
         
+        $row = 1;
+        $total = 0;
         foreach ($transactions as $key => $value) {            
             $sheet->setCellValue('A'.$key+5, $value->number);           
                         
             $sheet->setCellValue('B'.$key+5, Carbon::parse($value->date)->format('d/m/Y'));
-            if ($value->type_id == 1) {
+            if ($value->type == 1) {
                 $sheet->setCellValue('C'.$key+5, 'Individual');
-            }elseif ($value->type_id == 2) {
+            }elseif ($value->type == 2) {
                 $sheet->setCellValue('C'.$key+5, 'Lotes');
             } else {
                 $sheet->setCellValue('C'.$key+5, 'Pago');
@@ -223,8 +225,17 @@ class ReportingController extends Controller
 
             $sheet->getStyle('G'.$key+5)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
             $sheet->setCellValue('G'.$key+5, $value->total);
+            $row = $key+5;
+            $total += $value->total;
         }
 
+        
+        $sheet->getStyle('F'.$row + 1)->applyFromArray($styleArray);
+        $sheet->setCellValue('F'.$row + 1, "TOTAL");
+
+        $sheet->getStyle('G'.$row + 1)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
+        $sheet->getStyle('G'.$row + 1)->applyFromArray($styleArray);
+        $sheet->setCellValue('G'.$row + 1, $total);
          //nombre del archivo excel
          $file ="reporte_transacciones_".date('dmYHi').".xlsx";
 

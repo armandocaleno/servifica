@@ -126,7 +126,7 @@
                                     <td class="row">
                                         @if ($item->type == 1)
                                             Individual
-                                        @elseif ($item->type == 1)
+                                        @elseif ($item->type == 2)
                                             Lotes
                                         @else
                                             Pago
@@ -177,11 +177,11 @@
     </div>
 
     {{-- Pagination --}}
-    {{-- @if ($transactions->hasPages())
+    @if ($transactions->hasPages())
         <div class="px-4 py-4 bg-white border border-gray-200 mt-2 rounded-md shadow-lg">
             {{ $transactions->links() }}   
         </div>
-    @endif --}}
+    @endif
 
     <script>
         $(document).ready(function(){           

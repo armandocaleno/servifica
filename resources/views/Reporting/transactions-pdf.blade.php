@@ -66,6 +66,9 @@
     </header>        
     
     <div id="content" class="align-middle min-w-full mt-4">
+        @php
+            $total = 0;
+        @endphp
         <table class="w-full text-sm">
             <thead class="head text-sm rounded">                            
                 <th class="px-2 py-2 text-left leading-4">Número</th>
@@ -73,11 +76,15 @@
                 <th class="px-2 py-2 text-left leading-4">Tipo</th>
                 <th class="px-2 py-2 text-left leading-4">Socio</th>                                                
                 <th class="px-2 py-2 text-left leading-4">Rubros</th>
-                <th class="px-2 py-2 text-right leading-4">Referencia</th>   
+                <th class="px-2 py-2 text-left leading-4">Referencia</th>   
                 <th class="px-2 py-2 text-right leading-4">Total</th>   
             </thead>
             <tbody class="border">
                 @foreach ($transactions as $item)
+                @php
+                    $total += $item->total;
+                @endphp
+
                     <tr class="border">                                            
                         <td class="px-2 whitespace-no-wrap">{{ $item->number }}</td>
                         <td class="px-2 whitespace-no-wrap">{{ \Carbon\Carbon::parse($item->date)->format('d/m/Y') }}</td>
@@ -90,7 +97,7 @@
                                 Pago
                             @endif
                         </td>
-                        <td class="px-2 whitespace-no-wrap">{{ $item->name }} {{ $item->lastname }}</td>    
+                        <td class="px-2 whitespace-no-wrap">{{ $item->partner->name }} {{ $item->partner->lastname }}</td>    
                         <td class="row whitespace-nowrap">
                             <ul>
                                 @foreach ($item->content as $i)
@@ -98,11 +105,20 @@
                                 @endforeach
                             </ul>
                         </td>                    
-                        <td class="px-2 whitespace-no-wrap">{{ $item->reference }}</td>   
-                        <td class="px-2 whitespace-no-wrap text-right">$ {{ $item->total }}</td>   
+                        <td class="px-2">{{ $item->reference }}</td>   
+                        <td class="px-2 text-right">${{ $item->total }}</td>   
                     </tr>
                 @endforeach
-            </tbody>        
+            </tbody>   
+            <tfoot>
+                <tr>
+                    <td colspan="7" class="text-right font-bold text-xl">
+                        @php
+                            echo "$ " . number_format($total, 2);
+                        @endphp
+                    </td>
+                </tr>    
+            </tfoot>     
         </table>    
     </div>    
 </body>

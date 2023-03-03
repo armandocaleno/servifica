@@ -6,8 +6,9 @@ use App\Models\Account;
 use App\Models\Partner;
 use App\Models\Transaction;
 use Carbon\Carbon;
-use Illuminate\Contracts\Database\Query\Builder;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -16,6 +17,8 @@ class Transactions extends Component
     use WithPagination;
 
     public $from_date, $to_date, $partner_id, $type, $account_id, $total;
+    public $currentPage, $perPage;
+
 
     public function mount()
     {                      
@@ -25,84 +28,77 @@ class Transactions extends Component
         $this->partner_id = "";
         $this->account_id = "";
         $this->total = 0;
+        $this->currentPage = 1;
+        $this->perPage = 5;
     }
 
-    public function updatedFromDate()
-    {
-        $this->resetPage();
-    }
+    // public function updatedFromDate()
+    // {
+    //     $this->resetPage();
+    // }
 
-    public function updatedToDate()
-    {
-        $this->resetPage();
-    }
+    // public function updatedToDate()
+    // {
+    //     $this->resetPage();
+    // }
 
-    public function updatedPartnerId()
-    {
-        $this->resetPage();
-    }
+    // public function updatedPartnerId()
+    // {
+    //     $this->resetPage();
+    // }
 
-    public function updatedType()
-    {
-        $this->resetPage();
-    }
+    // public function updatedType()
+    // {
+    //     $this->resetPage();
+    // }
 
     public function render()
     {
         $this->total = 0;
         $partners = Partner::where('status', Partner::ACTIVO)->get();    
         $accounts = Account::all();              
-        $transactions = [];
+        $selected_transactions = [];
+   
         if ($this->type == 0) {
             $trans = Transaction::join('partners', 'partners.id', 'transactions.partner_id')
             ->select(['transactions.*', 'partners.name'])
             ->where('transactions.company_id', session('company')->id)   
             ->whereBetween('date', [$this->from_date, $this->to_date])
-            ->partner($this->partner_id)                      
-            ->orderBy('date')->paginate(10); 
+            ->partner($this->partner_id)   
+            ->orderBy('id')                   
+            ->orderBy('date')->get(); 
         } else {
             $trans = Transaction::join('partners', 'partners.id', 'transactions.partner_id')
             ->select(['transactions.*', 'partners.name'])
             ->where('transactions.company_id', session('company')->id)  
             ->whereBetween('date', [$this->from_date, $this->to_date])
             ->where('type', $this->type)
-            // ->whereJsonContains('content->f6bddb674747fdae4a2c66e17666ec49->id', 2)
-            ->partner($this->partner_id)                      
-            ->orderBy('date')->paginate(10); 
+            ->partner($this->partner_id)
+            ->orderBy('id')                   
+            ->orderBy('date')->get(); 
         }
+
+       
 
         foreach ($trans as $value) {
-            foreach ($value->content as $c) {
-                if ($this->account_id != "") {
+            if ($this->account_id != "") {
+                foreach ($value->content as $c) {
                     if ($c['id'] == $this->account_id) {
-                        $transactions[] = $value;
+                        $selected_transactions[] = $value;
                     }
-                }else {
-                    $transactions[] = $value;
                 }
-                $this->total += $value['total'];
+            }else {
+                $selected_transactions[] = $value;
             }
-        }
-        // dd($transactions);
-        // =====================================================================================
-        // $partners = Partner::where('status', Partner::ACTIVO)->get();                  
 
-        // if ($this->type == 0) {
-        //     $transactions = Transaction::join('partners', 'partners.id', 'transactions.partner_id')
-        //     ->select(['transactions.*', 'partners.name'])
-        //     ->where('transactions.company_id', session('company')->id)   
-        //     ->whereBetween('date', [$this->from_date, $this->to_date])        
-        //     ->partner($this->partner_id)                      
-        //     ->orderBy('date')->paginate(10); 
-        // } else {
-        //     $transactions = Transaction::join('partners', 'partners.id', 'transactions.partner_id')
-        //     ->select(['transactions.*', 'partners.name'])
-        //     ->where('transactions.company_id', session('company')->id)  
-        //     ->whereBetween('date', [$this->from_date, $this->to_date])
-        //     ->where('type', $this->type)
-        //     ->partner($this->partner_id)                      
-        //     ->orderBy('date')->paginate(10); 
-        // }
+            $this->total += $value['total'];
+        }
+
+        $this->currentPage = LengthAwarePaginator::resolveCurrentPage();
+
+        $currentElements = array_slice($selected_transactions, $this->perPage * ($this->currentPage - 1), $this->perPage, true);
+        
+        $transactions = new LengthAwarePaginator($currentElements, count($selected_transactions), $this->perPage, $this->currentPage);
 
         return view('livewire.reporting.transactions', compact('transactions', 'partners', 'accounts'));
     }
