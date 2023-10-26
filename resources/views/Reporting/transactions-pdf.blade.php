@@ -39,6 +39,11 @@
             width: 50%;
         }
 
+        table#signatures {
+            border-collapse: separate;
+            border-spacing: 10px 5px;
+        }
+
     </style>
 </head>
 <body>
@@ -119,7 +124,21 @@
                     </td>
                 </tr>    
             </tfoot>     
-        </table>    
+        </table>   
+        
+        <table class=" w-full mt-4" id="signatures">
+            <tr>
+                <td class="text-center border-t" width="33%">
+                    GERENTE
+                </td>
+                <td class="text-center border-t" width="33%">
+                    CONCEJO DE VIGILANCIA
+                </td>
+                <td class="text-center border-t" width="33%">
+                    SECRETARIO(A)
+                </td>
+            </tr>
+        </table>
     </div>    
 </body>
 </html>

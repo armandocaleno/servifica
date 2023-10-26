@@ -4,7 +4,9 @@
         <x-jet-input type="text" class="flex-1" wire:model="search" placeholder="Buscar por número o socio..."/>             
         
         {{-- New input button --}}      
-        <a href="{{ route('transactions.create') }}" class="px-4 py-2 bg-orange-500 rounded-md font-semibold text-white shadow-md hover:bg-opacity-80 focus:outline-none focus:ring active:text-gray-700 disabled:opacity-25 transition">Nuevo</a>               
+        @can('transactions.collection.create')
+            <a href="{{ route('transactions.create') }}" class="px-4 py-2 bg-orange-500 rounded-md font-semibold text-white shadow-md hover:bg-opacity-80 focus:outline-none focus:ring active:text-gray-700 disabled:opacity-25 transition">Nuevo cobro</a>               
+        @endcan
     </div>
 
     {{-- Table --}}
@@ -114,12 +116,14 @@
                                         <div class="flex space-x-4">
                                             <button wire:click="showDetail({{ $item }})" class="text-cyan-600 hover:opacity-50"><i class="fa-solid fa-list"></i></button>                                        
 
-                                            <a href="{{ route('transaction.voucher', $item) }}" target="_blank" class="text-red-600 hover:opacity-50"><i class="fa-solid fa-file-pdf"></i></a>
-                                          
+                                            @can('transactions.collection.voucher')
+                                                <a href="{{ route('transaction.voucher', $item) }}" target="_blank" class="text-red-600 hover:opacity-50"><i class="fa-solid fa-file-pdf"></i></a>
+                                            @endcan
                                             {{-- <a href="{{ route('transactions.edit', $item) }}" class="text-gray-600 hover:opacity-50"><i class="fa-solid fa-pen-to-square"></i></a> --}}
-                                                                                                                                                                        
-                                            <a href="#" wire:click="delete({{ $item }})" class="text-orange-500 hover:opacity-50"><i class="fa-solid fa-trash-can"></i></a>
-                                           
+                                                              
+                                            @can('transactions.delete')
+                                                <a href="#" wire:click="delete({{ $item }})" class="text-orange-500 hover:opacity-50"><i class="fa-solid fa-trash-can"></i></a>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>

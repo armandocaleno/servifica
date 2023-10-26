@@ -3,8 +3,12 @@
         {{-- Search --}}            
         <x-jet-input type="text" class="flex-1" wire:model="search" placeholder="Buscar por nombre..."/>             
         
-        {{-- New input button --}}      
-        <a href="{{ route('companies.create') }}" class="px-4 py-2 bg-orange-500 rounded-md font-semibold text-white shadow-md hover:bg-opacity-80 focus:outline-none focus:ring active:text-gray-700 disabled:opacity-25 transition">Nuevo</a>               
+        {{-- New input button --}}   
+        @can('admin.companies.create')   
+            <a href="{{ route('companies.create') }}" class="px-4 py-2 bg-orange-500 rounded-md font-semibold text-white shadow-md hover:bg-opacity-80 
+            focus:outline-none focus:ring active:text-gray-700 disabled:opacity-25 transition">Nuevo
+            </a>               
+        @endcan
     </div>
 
     {{-- Table --}}
@@ -92,11 +96,13 @@
 
                                     <td class="row font-medium">
                                         <div class="flex space-x-4">                                                                                        
-                                          
-                                            <a href="{{ route('companies.edit', $item) }}" class="text-gray-600 hover:opacity-50"><i class="fa-solid fa-pen-to-square"></i></a>
-                                                                                                                                                                        
-                                            <a href="#" wire:click="delete({{ $item }})" class="text-orange-500 hover:opacity-50"><i class="fa-solid fa-trash-can"></i></a>
-                                           
+                                            @can('admin.companies.update')  
+                                                <a href="{{ route('companies.edit', $item) }}" class="text-gray-600 hover:opacity-50"><i class="fa-solid fa-pen-to-square"></i></a>
+                                            @endcan
+
+                                            @can('admin.companies.delete')                                                                                                           
+                                                <a href="#" wire:click="delete({{ $item }})" class="text-orange-500 hover:opacity-50"><i class="fa-solid fa-trash-can"></i></a>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>

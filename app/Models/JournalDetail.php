@@ -9,6 +9,10 @@ class JournalDetail extends Model
 {
     use HasFactory;
 
+    protected $with = ['accounting'];
+
+    protected $guarded = ['id', 'created_at', 'updated_at'];
+
     //Relación uno a muchos inversa
     public function accounting()
     {

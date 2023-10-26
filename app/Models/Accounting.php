@@ -16,14 +16,16 @@ class Accounting extends Model
 
     public static $is_group = [self::SI, self::NO];
 
+    protected $with = ['class', 'type'];
+
     //Relación uno a muchos
-    public function classes()
+    public function class()
     {
-        return $this->belongsTo(AccountClass::class);
+        return $this->belongsTo(AccountClass::class, 'account_class_id');
     }
 
-    public function types()
+    public function type()
     {
-        return $this->belongsTo(AccountType::class);
+        return $this->belongsTo(AccountType::class, 'account_type_id');
     }
 }

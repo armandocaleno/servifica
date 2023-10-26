@@ -70,46 +70,6 @@ class Lotes extends Component
         }
     }
    
-    // public function save()
-    // {        
-    //     $this->transaction->content = Cart::instance('new')->content();    
-    //     $this->transaction->total = Cart::instance('new')->subtotal();
-
-    //     if ($this->transaction->id) {
-    //         $this->transaction->save();
-    //     } else {
-    //         $this->validate();
-
-    //         $transaction = Transaction::create([
-    //             'date' => $this->transaction->date,
-    //             'number' => $this->transaction->number,
-    //             'reference' => $this->transaction->reference,
-    //             'total' => $this->transaction->total,                
-    //             'content' => $this->transaction->content,
-    //             'type' => Transaction::LOTES
-    //         ]);
-
-    //         $partners = Partner::where('status', Partner::ACTIVO)->get();
-
-    //         foreach ($partners as $partner) {
-    //             $transaction->partners()->attach($partner->id);
-
-    //             //Registrar saldos en cuentas
-    //             $this->totalUpdate($transaction, $partner->id);
-    //         }                        
-    //     }
-
-    //     // // Mensaje al usuario
-    //     $this->success('Guardado exitosamente.');       
-       
-    //      // Reset controles
-    //     Cart::instance('old')->destroy();
-    //     Cart::instance('new')->destroy();                
-                             
-    //     return redirect()->route('transactions.index');
-        
-    // }
-
     public function totalUpdate(Transaction $transaction, $partner_id)
     {                   
         //Obtengo el contenido de la transacción

@@ -2,7 +2,7 @@
     @if ($errors->any())
         <div class="text-red-800 text-sm mb-4 w-full rounded border border-red-700 bg-rose-100 p-4">
             <ul>
-                <li class=" font-bold">La transacción no se guradó porque se detectaron los siguientes errores:</li>
+                <li class=" font-bold">La transacción no se guardó porque se detectaron los siguientes errores:</li>
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach

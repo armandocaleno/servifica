@@ -18,8 +18,12 @@ class Index extends Component
                             $query->where('code', 'LIKE', $this->search . '%')
                             ->orWhere('name', 'LIKE', '%' . $this->search . '%');
                         })
+                        ->with('class')
+                        ->with('type')
                         ->orderBy('account_class_id')
                         ->orderBy('code')->get();
+
+                        // dd($accountings);
 
         return view('livewire.accounting.index', compact('accountings'));
     }
@@ -27,5 +31,11 @@ class Index extends Component
     public function updatedSearch()
     {
         $this->emit('searching');
+    }
+
+    public function destroy(Accounting $accounting)
+    {
+        $accounting->delete();
+        $this->render();
     }
 }

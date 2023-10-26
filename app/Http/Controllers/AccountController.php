@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Models\Accounting;
 use Illuminate\Http\Request;
 
 class AccountController extends Controller
@@ -15,14 +16,21 @@ class AccountController extends Controller
     public function create()
     {
         $account = new Account();
-        return view('accounts.create', compact('account'));
+        $accountings = Accounting::where('company_id', session('company')->id)
+                                ->where('group', '0')
+                                ->orderBy('account_class_id')
+                                ->orderBy('code')
+                                ->get();
+
+        return view('accounts.create', compact('account', 'accountings'));
     }
 
     public function store(Request $request)
     {        
         $request->validate([
             'name' => 'required|max:50|unique:accounts',                                  
-            'type' => 'required'            
+            'type' => 'required',
+            'accounting_id' => 'required|integer'         
         ]);
         
         Account::create($request->all());
@@ -32,14 +40,21 @@ class AccountController extends Controller
 
     public function edit(Account $account)
     {
-        return view('accounts.edit', compact('account'));
+        $accountings = Accounting::where('company_id', session('company')->id)
+                                ->where('group', '0')
+                                ->orderBy('account_class_id')
+                                ->orderBy('code')
+                                ->get();
+        
+        return view('accounts.edit', compact('account', 'accountings'));
     }
 
     public function update(Request $request)
     {                       
         $request->validate([
             'name' => 'required|max:50|unique:accounts,name,'.$request->id,                                  
-            'type' => 'required'            
+            'type' => 'required',
+            'accounting_id' => 'required|integer'        
         ]);
 
         $account = Account::find($request->id);

@@ -3,11 +3,15 @@
 namespace App\Http\Livewire\Transaction;
 
 use App\Models\Account;
+use App\Models\AccountingConfig;
+use App\Models\Journal;
+use App\Models\JournalDetail;
 use App\Models\Partner;
 use App\Models\Transaction;
 use Gloudemans\Shoppingcart\Facades\Cart;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\DB;
 
 class TransactionsIndex extends Component
 {
@@ -42,7 +46,7 @@ class TransactionsIndex extends Component
             ->orwhere('reference', 'LIKE', '%' . $this->search . '%') ;                        
         })
         ->orderBy($this->sort, $this->direction)->paginate(10);                      
-
+        
         return view('livewire.transaction.transactions-index', compact('transactions'));
     }
 
@@ -78,31 +82,81 @@ class TransactionsIndex extends Component
     }
 
     public function delete(Transaction $transaction)
-    {
+    {   
         $this->transaction = $transaction;   
         $this->confirmingDeletion = true;     
     }
 
     public function destroy()
     {               
-        //actualiza los saldos de la cuentas de la transacción a eliminar
-        $this->totalUpdate($this->transaction);
+        DB::beginTransaction();
 
-        //elimina la transacción
-        $this->transaction->delete();
+        try {
+            //actualiza los saldos de la cuentas de la transacción a eliminar
+            $this->totalUpdate($this->transaction);
 
-        //cierra el modal
-        $this->confirmingDeletion = false;
+            // CREA ASIENTO CONTABLE DE REVERSO
 
-        // Mensaje enviado a la vista
-        $this->success('Registro eliminado correctamente.');
+            // OBTENER NUMERO DE ASIENTO
+            $j = new Journal();
+            $number = $j->getNumber();
+
+            // CUENTA DE SOCIOS
+            $account_cash = AccountingConfig::where('name', 'cash')->first()->accounting_id;
+
+            $fecha_actual = date("Y-m-d");
+
+            $journal = Journal::create([
+                'number' => $number,
+                'date' => $fecha_actual,
+                'refence' => "Anulación Transacción: " .  $this->transaction->number . " - Socio: " . $this->transaction->partner->name,
+                'company_id' => session('company')->id,
+                'type' => Journal::AUTO,
+                'journable_id' => $this->transaction->id,
+                'journable_type' => Transaction::class
+            ]);
+
+            JournalDetail::create([
+                'journal_id' => $journal->id,
+                'accounting_id' => $account_cash,
+                'debit_value' => 0,
+                'credit_value' => $this->transaction->total
+            ]);
+
+            foreach ($this->transaction->content as $item) {
+
+                $accounting_id = $item['options']['accounting_id'];
+                JournalDetail::create([
+                    'journal_id' => $journal->id,
+                    'accounting_id' => $accounting_id,
+                    'debit_value' => $item['price'],
+                    'credit_value' => 0
+                ]);
+            }
+
+            //elimina la transacción
+            $this->transaction->delete();
+
+            DB::commit();
+              //cierra el modal
+            $this->confirmingDeletion = false;
+
+            // Mensaje enviado a la vista
+            $this->success('Registro eliminado correctamente.');
+
+        } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollback();
+            $this->info('Hubo un error y no se eliminó la transacción.');
+            $this->info($th->getMessage());
+        }
     }    
 
     public function totalUpdate(Transaction $transaction)
     {                   
         //setea el contenido de la transacción
         $content = $transaction->content;
-        
+    
         //Obtiene el socio de la transacción
         $partner = Partner::find($transaction->partner_id);  
                         
@@ -139,4 +193,14 @@ class TransactionsIndex extends Component
              ]
          );       
      }
+
+     // Mensaje de información
+    public function info($message)
+    {
+        $this->dispatchBrowserEvent('info', 
+            [
+                'message' => $message,                       
+            ]
+        );       
+    }
 }

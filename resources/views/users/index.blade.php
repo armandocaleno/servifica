@@ -10,9 +10,9 @@
            
            
             {{-- New user button --}}
-            {{-- @can('admin.users.create') --}}
+            @can('admin.users.create')
                 <a href="{{ route('users.create') }}" class="bg-orange-600 inline-flex items-center px-4 py-2 rounded-md font-semibold text-white shadow-md hover:bg-opacity-80 focus:outline-none focus:ring active:text-gray-700 disabled:opacity-25 transition">Nuevo usuario</a>
-            {{-- @endcan --}}
+            @endcan
        </div>
 
          {{-- Tabla --}}
@@ -46,17 +46,17 @@
                                             </td>
                                             <td class="row">
                                                 <div class="flex space-x-4">
-                                                    {{-- @can('admin.users.edit') --}}
+                                                    @can('admin.users.edit')
                                                         <a href="{{ route('users.edit', $item) }}" class="text-gray-600 hover:opacity-50"><i class="fa-solid fa-pen-to-square"></i></a>
-                                                    {{-- @endcan --}}
+                                                    @endcan
 
-                                                    {{-- @can('admin.users.delete') --}}
+                                                    @can('admin.users.delete')
                                                         <form action="{{ route('users.destroy', $item) }}" method="post">
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="submit" class="text-orange-500 hover:opacity-50"><i class="fa-solid fa-trash-can"></i></button>
                                                         </form>
-                                                    {{-- @endcan --}}
+                                                    @endcan
                                                 </div>
                                             </td>
                                         </tr>
