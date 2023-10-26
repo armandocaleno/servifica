@@ -15,7 +15,7 @@ class Transaction extends Model
 
     protected $guarded = ['id', 'created_at', 'updated_at'];
 
-    protected $with = ['partner'];    
+    protected $with = ['partner', 'journal'];    
 
     //  Convierte el campo tipo json a un array
     protected $casts = [
@@ -32,6 +32,11 @@ class Transaction extends Model
     public function company()
     {
        return $this->belongsTo(Company::class);
+    }
+
+    public function journal()
+    {
+        return $this->morphOne(Journal::class, 'journable', 'journable_type', 'journable_id');
     }
 
      // Query scope

@@ -178,6 +178,13 @@ return [
         'partner_id'            => 'socio',
         'account'               => 'cuenta',
         'account_id'            => 'cuenta',
-        'amounts.*'             => 'monto'
+        'amounts.*'             => 'monto',
+        'accounting_id'         => 'cuenta contable',
+        'bank_id'               => 'banco',
+        'type'                  => 'tipo',
+        'owner'                 => 'titular',
+        'number'                => 'número',
+        'supplier_id'           => 'proveedor',
+        'refence'               => 'referencia',
     ],
 ];

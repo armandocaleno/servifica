@@ -3,9 +3,13 @@
 namespace App\Http\Livewire\Transaction;
 
 use App\Models\Account;
+use App\Models\AccountingConfig;
 use App\Models\BankAccount;
+use App\Models\Journal;
+use App\Models\JournalDetail;
 use App\Models\Partner;
 use App\Models\Transaction;
+use Illuminate\Support\Facades\DB;
 use PDF;
 use Carbon\Carbon;
 use Gloudemans\Shoppingcart\Facades\Cart;
@@ -146,7 +150,7 @@ class Payment extends Component
             'qty' => 1,
             'price' => $this->amount,
             'weight' => 100,
-            'options' => ['previus' => $this->saldo, 'new' => $newtotal]        
+            'options' => ['previus' => $this->saldo, 'new' => $newtotal, 'accounting_id' => $account->accounting_id]        
         ]);                               
         
         $this->amount = "0.00";     
@@ -168,90 +172,142 @@ class Payment extends Component
         $accounts = Account::all(); //obtiene todas las cuentas
         $partner = Partner::find($this->transaction->partner_id);
 
-        if ($this->transaction->id) {
-            //actualiza los saldos con el detalle antiguo
-            $this->totalRoolback();
+        DB::beginTransaction();
 
-            //actualiza la transacción con los nuevos datos
-            $this->transaction->save();
-
-            //alamacena el id de la transacción guardada
-            $this->lastid = $this->transaction->id;         
-        } else {
-            $this->validate();
-
-            //alamacena todas las cuentas con los saldos en el carrito de vaucher            
-            foreach ($accounts as $account) {
-                $previus = 0;                        
-                $new = 0;
-
-                if ($partner->accounts()->find($account->id)) {
-                    $previus = $partner->accounts()->find($account->id)->pivot->value;                                                        
-                    $new = $partner->accounts()->find($account->id)->pivot->value;
-                }  
-                
-                //añade el contenido de la cuenta en el carrito
-                Cart::instance('voucher')->add([
-                    'id' => $account->id,
-                    'name' => $account->name,
-                    'qty' => 1,
-                    'price' => 0,
-                    'weight' => 100,
-                    'options' => ['previus' => $previus, 'new' => $new]        
-                ]);                  
-            }
+        try {
             
-            //actualiza las cuentas del voucher que están en la trasacción actual
-            foreach (Cart::instance('voucher')->content() as $voucher) {
-                foreach ($this->transaction->content as $value ) {  
-                    if ($voucher->id === $value['id']) {
-                        Cart::instance('voucher')->update($voucher->rowId,[                                                                                    
-                            'price' => $value['price'],                            
-                            'options' => ['previus' => $value['options']['previus'], 'new' => $value['options']['new']]        
-                        ]);  
-                    }              
-                     
+            if ($this->transaction->id) {
+                //actualiza los saldos con el detalle antiguo
+                $this->totalRoolback();
+
+                //actualiza la transacción con los nuevos datos
+                $this->transaction->save();
+
+                //alamacena el id de la transacción guardada
+                $this->lastid = $this->transaction->id;         
+            } else {
+                $this->validate();
+
+                //alamacena todas las cuentas con los saldos en el carrito de vaucher            
+                foreach ($accounts as $account) {
+                    $previus = 0;                        
+                    $new = 0;
+
+                    if ($partner->accounts()->find($account->id)) {
+                        $previus = $partner->accounts()->find($account->id)->pivot->value;                                                        
+                        $new = $partner->accounts()->find($account->id)->pivot->value;
+                    }  
+                    
+                    //añade el contenido de la cuenta en el carrito
+                    Cart::instance('voucher')->add([
+                        'id' => $account->id,
+                        'name' => $account->name,
+                        'qty' => 1,
+                        'price' => 0,
+                        'weight' => 100,
+                        'options' => ['previus' => $previus, 'new' => $new]        
+                    ]);                  
                 }
-            }                         
+                
+                //actualiza las cuentas del voucher que están en la trasacción actual
+                foreach (Cart::instance('voucher')->content() as $voucher) {
+                    foreach ($this->transaction->content as $value ) {  
+                        if ($voucher->id === $value['id']) {
+                            Cart::instance('voucher')->update($voucher->rowId,[                                                                                    
+                                'price' => $value['price'],                            
+                                'options' => ['previus' => $value['options']['previus'], 'new' => $value['options']['new']]        
+                            ]);  
+                        }              
+                        
+                    }
+                }                         
+                
+                //guarda los rubros de todas las cuentas en el objeto transacción
+                $this->transaction->voucher = Cart::instance('voucher')->content();
+
+                //obtiene la cuenta bancaria asociada
+                $bank_account = BankAccount::find($this->bank_account_id);
+
+                //crea el array con la información adicional y la asigna al objeto transacción
+                $aditional_info = ['bank_account_id' => $this->bank_account_id, 'bank'=> $bank_account->bank->name,'check_number' => $this->check_number];           
+                $this->transaction->aditional_info = $aditional_info;
+                
+                //guarda la transacción
+                $transaction = Transaction::create([
+                    'date' => $this->transaction->date,
+                    'number' => $this->transaction->number,
+                    'partner_id' => $this->transaction->partner_id,
+                    'reference' => $this->transaction->reference,
+                    'total' => $this->transaction->total,                
+                    'content' => $this->transaction->content,
+                    'voucher' => $this->transaction->voucher,
+                    'aditional_info' => $this->transaction->aditional_info,
+                    'type' => Transaction::PAGO,
+                    'company_id' => session('company')->id
+                ]);                        
+                
+                //Obtiene el id de la transacción ingresada
+                $this->lastid = $transaction->id;  
+                
+                
+                // CREA ASIENTO CONTABLE
+
+                // OBTENER NUMERO DE ASIENTO
+                $j = new Journal();
+                $number = $j->getNumber();
+
+                // CUENTA DE SOCIOS
+                $account_partners = AccountingConfig::where('name', 'partners')->first()->accounting_id;
+
+                $journal = Journal::create([
+                    'number' => $number,
+                    'date' => $this->transaction->date,
+                    'refence' => "Pago: " .  $this->transaction->number . " - Socio: " . $partner->name,
+                    'company_id' => session('company')->id,
+                    'type' => Journal::AUTO,
+                    'journable_id' => $transaction->id,
+                    'journable_type' => Transaction::class
+                ]);
+
+                foreach (Cart::instance('new')->content() as $item) {
+
+                    $accounting_id = $item->options['accounting_id'];
+
+                    JournalDetail::create([
+                        'journal_id' => $journal->id,
+                        'accounting_id' => $accounting_id,
+                        'debit_value' => $item->price,
+                        'credit_value' => 0
+                    ]);
+                }
+
+                JournalDetail::create([
+                    'journal_id' => $journal->id,
+                    'accounting_id' => $bank_account->accounting_id,
+                    'debit_value' => 0,
+                    'credit_value' => $this->transaction->total
+                ]);
+            }
+
+            //Registra o actualiza saldos en cuentas
+            $this->totalUpdate($this->transaction);
+
+            DB::commit();
+
+             // Muestra mensaje al usuario
+            $this->success('Guardado exitosamente.');                               
             
-            //guarda los rubros de todas las cuentas en el objeto transacción
-            $this->transaction->voucher = Cart::instance('voucher')->content();
+            $this->resetControls();        
 
-            //obtiene la cuenta bancaria asociada
-            $bank_account = BankAccount::find($this->bank_account_id);
+            //abre modal de descarga de recibo (voucher)
+            $this->confirmingVoucher = true;  
 
-            //crea el array con la información adicional y la asigna al objeto transacción
-            $aditional_info = ['bank_account_id' => $this->bank_account_id, 'bank'=> $bank_account->bank->name,'check_number' => $this->check_number];           
-            $this->transaction->aditional_info = $aditional_info;
-            
-            //guarda la transacción
-            $transaction = Transaction::create([
-                'date' => $this->transaction->date,
-                'number' => $this->transaction->number,
-                'partner_id' => $this->transaction->partner_id,
-                'reference' => $this->transaction->reference,
-                'total' => $this->transaction->total,                
-                'content' => $this->transaction->content,
-                'voucher' => $this->transaction->voucher,
-                'aditional_info' => $this->transaction->aditional_info,
-                'type' => Transaction::PAGO,
-                'company_id' => session('company')->id
-            ]);                        
-            
-            //Obtiene el id de la transacción ingresada
-            $this->lastid = $transaction->id;                        
-        }
-
-        //Registra o actualiza saldos en cuentas
-        $this->totalUpdate($this->transaction);
-
-        // Muesttra mensaje al usuario
-        $this->success('Guardado exitosamente.');                               
-       
-        $this->resetControls();        
-
-        //abre modal de descarga de recibo (voucher)
-        $this->confirmingVoucher = true;                                                                  
+        } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollback();
+            $this->info('Hubo un error y no se guardó la transacción.');
+            $this->info($th->getMessage());
+        }                                                              
     }
 
     public function resetControls()

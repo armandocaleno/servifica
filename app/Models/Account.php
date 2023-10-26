@@ -9,7 +9,9 @@ class Account extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'type'];
+    protected $fillable = ['name', 'type', 'accounting_id'];
+
+    protected $with = ['accounting'];
 
     const INGRESO = 1;
     const EGRESO = 2;

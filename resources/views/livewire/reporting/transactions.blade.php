@@ -67,8 +67,11 @@
                         </select> 
                     </div>                                                    
                 </div>  
-                                
-                <button type="submit" class="px-4 py-2 mt-2 bg-orange-500 rounded-md font-semibold text-white shadow-md hover:bg-opacity-80 focus:outline-none focus:ring active:text-gray-700 disabled:opacity-25 transition">Exportar</button>
+                @can('reporting.transactions.export') 
+                    <button type="submit" class="px-4 py-2 mt-2 bg-orange-500 rounded-md font-semibold text-white shadow-md hover:bg-opacity-80
+                                             focus:outline-none focus:ring active:text-gray-700 disabled:opacity-25 transition"
+                                             >Exportar</button>
+                @endcan
             </div>    
         
         </form>        

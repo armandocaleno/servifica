@@ -6,8 +6,6 @@ use App\Models\Account;
 use App\Models\Partner;
 use App\Models\Transaction;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
-use Illuminate\Pagination\Paginator;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -31,26 +29,6 @@ class Transactions extends Component
         $this->currentPage = 1;
         $this->perPage = 5;
     }
-
-    // public function updatedFromDate()
-    // {
-    //     $this->resetPage();
-    // }
-
-    // public function updatedToDate()
-    // {
-    //     $this->resetPage();
-    // }
-
-    // public function updatedPartnerId()
-    // {
-    //     $this->resetPage();
-    // }
-
-    // public function updatedType()
-    // {
-    //     $this->resetPage();
-    // }
 
     public function render()
     {
@@ -77,8 +55,6 @@ class Transactions extends Component
             ->orderBy('id')                   
             ->orderBy('date')->get(); 
         }
-
-       
 
         foreach ($trans as $value) {
             if ($this->account_id != "") {
