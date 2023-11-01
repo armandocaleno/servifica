@@ -117,10 +117,14 @@
                                             <button wire:click="showDetail({{ $item }})" class="text-cyan-600 hover:opacity-50"><i class="fa-solid fa-list"></i></button>                                        
 
                                             @can('transactions.collection.voucher')
-                                                <a href="{{ route('transaction.voucher', $item) }}" target="_blank" class="text-red-600 hover:opacity-50"><i class="fa-solid fa-file-pdf"></i></a>
+                                                <a href="{{ route('transaction.voucher', $item) }}" target="_blank" rel="noopener noreferrer" class="text-red-600 hover:opacity-50"><i class="fa-solid fa-file-pdf"></i></a>
                                             @endcan
                                             {{-- <a href="{{ route('transactions.edit', $item) }}" class="text-gray-600 hover:opacity-50"><i class="fa-solid fa-pen-to-square"></i></a> --}}
-                                                              
+                                                      
+                                            @can('transactions.collection.voucher')
+                                                <button wire:click="generateVoucherEmail({{ $item->id }})" wire:loading.attr="disabled" class="text-blue-600 hover:opacity-50"><i class="fa-solid fa-envelope"></i></button>
+                                            @endcan
+                                            
                                             @can('transactions.delete')
                                                 <a href="#" wire:click="delete({{ $item }})" class="text-orange-500 hover:opacity-50"><i class="fa-solid fa-trash-can"></i></a>
                                             @endcan

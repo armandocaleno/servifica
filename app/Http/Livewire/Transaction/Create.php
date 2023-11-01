@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Transaction;
 
+use App\Jobs\VoucherMailJob;
 use App\Models\Account;
 use App\Models\AccountingConfig;
 use App\Models\Journal;
@@ -170,10 +171,8 @@ class Create extends Component
 
         $accounts = Account::all(); //obtiene todas las cuentas
         $partner = Partner::find($this->transaction->partner_id);
-        $this->emailSend($partner, $this->transaction, session('company'));
-        return;
-        // $this->generateVoucherEmail('2637');
-        return;
+        
+
         if ($this->transaction->id) {
             //actualiza los saldos con el detalle antiguo
             $this->totalRoolback();
@@ -284,10 +283,12 @@ class Create extends Component
 
                 DB::commit();
 
-                // Muesttra mensaje al usuario
-                $this->success('Guardado exitosamente.');
+                // Muestra mensaje al usuario
+                $this->success('Cobro guardado correctamente.');
 
                 $this->resetControls();
+   
+                $this->generateVoucherEmail($this->lastid);
 
                 //abre modal de descarga de recibo (voucher)
                 $this->confirmingVoucher = true;
@@ -295,7 +296,7 @@ class Create extends Component
             } catch (\Throwable $th) {
                 //throw $th;
                 DB::rollback();
-                $this->info('Hubo un error y no se guardó la transacción.');
+                $this->info('Hubo un error y no se guardó el cobro.');
                 $this->info($th->getMessage());
             }
         }
@@ -345,12 +346,17 @@ class Create extends Component
     
         Arr::sort($transaction->voucher);
         $transaction->date = Carbon::parse($transaction->date)->format('d/m/Y'); //formatea la fecha       
-       
+        $voucher_path = '/app/Pago_'. $transaction->number . '.pdf';
         //genera el pdf con el contenido de la transacción
-        $pdf = PDF::loadView('transactions.voucher', ['transaction' => $transaction]);
+        
+        // $pdf = PDF::loadView('transactions.voucher', ['transaction' => $transaction]);
+        $pdf = PDF::loadView('transactions.voucher', ['transaction' => $transaction])->save(storage_path(). $voucher_path);
         //muestra el pdf    
         // return $pdf->stream();
-        return $pdf->download('voucher.pdf');
+        // return PDF::loadFile(public_path().'/myfile.html')->save('/path-to/my_stored_file.pdf')->stream('download.pdf');
+        // return $pdf->download('voucher.pdf');
+
+        $this->emailSend($transaction, $voucher_path);
     }
 
     public function totalUpdate(Transaction $transaction)
@@ -448,23 +454,23 @@ class Create extends Component
         );
     }
  
-    function emailSend(Partner $partner, Transaction $transaction, Company $company) {
-        if ($partner->email === null || $partner->email === '') {
+    function emailSend(Transaction $transaction, $path) {
+        $company = session('company');
+        if ($transaction->partner->email === null || $transaction->partner->email === '') {
             $this->info('No es posible enviar email. Email no válido.');
             return;
         } else {
-            if (Mail::to($partner->email)->send(new VoucherMail($partner, $transaction, $company))) {
+            if (Mail::to($transaction->partner->email)->send(new VoucherMail($transaction, $company))) {
                 $this->success('Email enviado!');
             } else {
                 $this->info('No se pudo enviar el email.');
             }
+            // VoucherMailJob::dispatch($transaction, $company);
         }
         
-        // Mail::to('armandoc8181@gmail.com')->send(new VoucherMail($partner));
-        // if (Mail::to('armandoc8181@gmail.com')->send(new VoucherMail($partner))) {
-        //     $this->success('Email enviado!');
-        // } else {
-        //     $this->info('Error al enviar email.');
-        // }
+        // eliminar archivo generado
+        if (file_exists(storage_path().$path)) {
+            unlink(storage_path().$path);
+        }
     }
 }

@@ -2,20 +2,20 @@
 
     <div class="">
         <x-jet-label for="number" value="Número:" />        
-        <input type="text" class="block sm:py-0 rounded border-gray-400 w-full text-gray-600" wire:model="transaction.number" disabled>        
+        <input type="text" class="block sm:py-0 rounded border-gray-400 w-full text-gray-600" wire:model.defer="transaction.number" disabled>        
         <x-jet-input-error for="transaction.number" class="mt-2" />           
     </div>       
     
     <div class="">
         <x-jet-label for="date" value="Fecha:" />        
-        <input type="date" class="block sm:py-0 rounded border-gray-400  w-full text-gray-700" wire:model="transaction.date">        
+        <input type="date" class="block sm:py-0 rounded border-gray-400  w-full text-gray-700" wire:model.defer="transaction.date">        
         <x-jet-input-error for="transaction.date" class="mt-2" />                
     </div>      
     
     <div class="xl:col-span-2">
         <x-jet-label for="partner_select" value="Socio:"/>
         <div wire:ignore class="flex-1">
-            <select id="partner_select" class="shadow-md z-10 w-full" wire:model="transaction.partner_id">
+            <select id="partner_select" class="shadow-md z-10 w-full" wire:model.defer="transaction.partner_id">
                 <option value="-1"></option>
                 @foreach ($partners as $partner)
                     <option value="{{ $partner->id }}">{{ $partner->name }}</option>
@@ -27,14 +27,14 @@
 
     <div class="xl:col-span-2">
         <x-jet-label for="reference" value="Referencia:" />        
-        <input type="text" class="block sm:py-0 rounded border-gray-400  w-full sm:w-44 xl:w-full text-gray-600" wire:model="transaction.reference">                
+        <input type="text" class="block sm:py-0 rounded border-gray-400  w-full sm:w-44 xl:w-full text-gray-600" wire:model.defer="transaction.reference">                
         <x-jet-input-error for="transaction.reference" class="mt-2" />                   
     </div>    
     
     <div class="xl:col-span-2">
         <x-jet-label for="bank_select" value="Banco:"/>
         <div class="flex-1">            
-            <select class="block sm:py-0 rounded border-gray-400  w-full sm:w-44 xl:w-full text-gray-600" wire:model="bank_account_id">
+            <select class="block sm:py-0 rounded border-gray-400  w-full sm:w-44 xl:w-full text-gray-600" wire:model.defer="bank_account_id">
                 <option value="-1"></option>
                 @foreach ($bank_accounts as $item)
                     <option value="{{ $item->id }}">{{ $item->number }} - {{ $item->bank->name }}</option>                    

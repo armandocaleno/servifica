@@ -1,6 +1,6 @@
 <div>
     <div class="flex items-center justify-between mb-4">          
-         <x-jet-button wire:click="save">
+         <x-jet-button wire:click="save" wire:loading.attr="disabled">
             Guardar
          </x-jet-button>
     </div>   

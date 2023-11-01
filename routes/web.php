@@ -52,9 +52,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('transacciones/create/lotes', [TransactionController::class, 'lotes'])->middleware('can:transactions.charge.create')->name('transactions.lotes');
     Route::post('transacciones/lotes/store', [TransactionController::class, 'store'])->middleware('can:transactions.charge.create')->name('transactions.lotes.store');
     Route::get('recibo/{id}', [Create::class, 'generatevoucher'])->middleware('can:transactions.collection.voucher')->name('transaction.voucher');
-    Route::get('enviar-recibo-email/{id}', [Create::class, 'generateVoucherEmail'])->middleware('can:transactions.collection.voucher')->name('transaction.voucher');
     Route::get('transacciones/pagos/create', [TransactionController::class, 'payment'])->middleware('can:transactions.payment.create')->name('transactions.payment.create');
-
     //Socios
     Route::get('socios/index', [PartnerController::class, 'index'])->middleware('can:admin.partners.index')->name('partners.index');
     Route::get('socios/create', [PartnerController::class, 'create'])->middleware('can:admin.partners.create')->name('partners.create');
