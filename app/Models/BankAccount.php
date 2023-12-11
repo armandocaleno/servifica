@@ -11,6 +11,7 @@ class BankAccount extends Model
 
     const AHORRO = 1;
     const CORRIENTE = 2;
+    const CAJA = 3;
     const ACTIVO = 1;
     const INACTIVO = 2;
 

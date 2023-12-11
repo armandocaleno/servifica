@@ -15,6 +15,7 @@
                             <th class="thead">Número</th> 
                             <th class="thead">Titular</th>
                             <th class="thead">Tipo</th>
+                            <th class="thead">Nombre/Referencia</th>  
                             <th class="thead">Banco</th>                           
                             <th class="thead">Cuenta contable</th>
                             <th class="thead"></th>
@@ -29,11 +30,20 @@
                                     <td class="row whitespace-nowrap">
                                         @if ($item->type == '1')
                                             Ahorro
-                                        @else
+                                        @elseif ($item->type == '2')
                                             Corriente
+                                        @else
+                                            Caja / Efectivo
                                         @endif
                                     </td>
-                                    <td class="row whitespace-nowrap">{{ $item->bank->name }}</td>
+                                    <td class="row whitespace-nowrap">{{ $item->reference }}</td>
+                                    <td class="row whitespace-nowrap">
+                                        @if ( $item->bank)
+                                            {{ $item->bank->name }}
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
                                     <td class="row ">{{ $item->accounting->name }}</td>
                                     
                                     <td class="row flex space-x-4">

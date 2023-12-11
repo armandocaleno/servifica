@@ -4,7 +4,7 @@
         <x-jet-input type="text" class="flex-1" wire:model="search" placeholder="Buscar por número, beneficiario o referencia..."/>             
         
         {{-- New input button --}}      
-        <a href="{{ route('checks.create') }}" class="px-4 py-2 bg-orange-500 rounded-md font-semibold text-white shadow-md hover:bg-opacity-80 focus:outline-none focus:ring active:text-gray-700 disabled:opacity-25 transition">Nuevo</a>               
+        <a href="{{ route('payments.create') }}" class="px-4 py-2 bg-orange-500 rounded-md font-semibold text-white shadow-md hover:bg-opacity-80 focus:outline-none focus:ring active:text-gray-700 disabled:opacity-25 transition">Nuevo</a>               
     </div>
 
     {{-- Table --}}
@@ -14,20 +14,6 @@
                 <table class="min-w-full">
                     <thead>
                         <tr>         
-                            <th class="thead cursor-pointer" wire:click="order('number')">
-                                Numero
-                                {{-- sort --}}
-                                @if ($sort == 'number')                                    
-                                    @if ($direction == 'desc')
-                                        <i class="fas fa-sort-alpha-up-alt float-right mt-1"></i>
-                                    @else
-                                        <i class="fas fa-sort-alpha-down-alt float-right mt-1"></i>
-                                    @endif
-                                @else
-                                    <i class="fas fa-sort float-right mt-1"></i>
-                                @endif 
-                            </th>
-
                             <th class="thead cursor-pointer" wire:click="order('date')">
                                 Fecha
                                 {{-- sort --}}
@@ -42,16 +28,30 @@
                                 @endif 
                             </th>
 
-                            <th class="thead">
-                                Tipo                                
+                            <th class="thead cursor-pointer" wire:click="order('number')">
+                                Numero
+                                {{-- sort --}}
+                                @if ($sort == 'number')                                    
+                                    @if ($direction == 'desc')
+                                        <i class="fas fa-sort-alpha-up-alt float-right mt-1"></i>
+                                    @else
+                                        <i class="fas fa-sort-alpha-down-alt float-right mt-1"></i>
+                                    @endif
+                                @else
+                                    <i class="fas fa-sort float-right mt-1"></i>
+                                @endif 
                             </th>
-                            
+
                             <th class="thead">
                                 Beneficiario                                
-                            </th>
+                            </th> 
                             
                             <th class="thead">
                                 Cuenta b.                                
+                            </th> 
+
+                            <th class="thead">
+                                Forma de pago                                
                             </th> 
                             
                             <th class="thead">
@@ -59,15 +59,7 @@
                             </th>
                             
                             <th class="thead">
-                                Facturas                                
-                            </th>
-                            
-                            <th class="thead">
                                 Total                       
-                            </th>
-
-                            <th class="thead">
-                                Estado                       
                             </th>
                             
                             <th class="thead"></th>
@@ -75,31 +67,27 @@
                     </thead>
 
                     <tbody class="bg-white">
-                        @if ($checks->count())  
-                            @foreach ($checks as $item)
+                        @if ($payments->count())  
+                            @foreach ($payments as $item)
                                 <tr>
-                                    <td class="row">
-                                        {{ $item->number }}
-                                    </td>                                                                                                                              
-                                    
                                     <td class="row whitespace-nowrap">
                                         {{ $item->date }}
                                     </td>
 
                                     <td class="row">
-                                        @if ($item->type == "I")
-                                            Ingreso
-                                        @else
-                                            Egreso
-                                        @endif
-                                    </td>
+                                        {{ $item->number }}
+                                    </td>                                                                                                                              
 
                                     <td class="row">
                                         {{ $item->beneficiary }}
                                     </td>
 
                                     <td class="row">
-                                        {{ $item->bank_account->number }} - {{ $item->bank_account->bank->name }}
+                                        {{ $item->bankAccount->reference }}
+                                    </td>
+
+                                    <td class="row">
+                                        {{ $item->paymentMethod->name }}
                                     </td>
 
                                     <td class="row">
@@ -107,40 +95,21 @@
                                     </td>
 
                                     <td class="row">
-                                        @if ($item->expenses)
-                                            <ul>
-                                                @foreach ($item->expenses as $exp)
-                                                    <li>{{ $exp->number }}</li>
-                                                @endforeach
-                                            </ul>
-                                        @endif
-                                        
-                                    </td>
-
-                                    <td class="row">
                                         ${{ $item->total }}
-                                    </td>
-
-                                    <td class="row">
-                                        @if ($item->state == 1)
-                                            Activo
-                                        @else
-                                            Anulado
-                                        @endif
                                     </td>
 
                                     <td class="row font-medium">
                                         <div class="flex space-x-4">    
-                                            @can('banks.checks.voucher')                                                                               
-                                                <a href="{{ route('checks.voucher', $item) }}" target="_blank" class="text-red-600 hover:opacity-50"><i class="fa-solid fa-file-pdf"></i></a>
-                                            @endcan 
-                                            {{-- <a href="{{ route('checks.edit', $item) }}" class="text-gray-600 hover:opacity-50"><i class="fa-solid fa-pen-to-square"></i></a> --}}
+                                            {{-- @can('banks.payments.voucher')                                                                                --}}
+                                                <a href="{{ route('payments.voucher', $item) }}" target="_blank" class="text-red-600 hover:opacity-50"><i class="fa-solid fa-file-pdf"></i></a>
+                                            {{-- @endcan  --}}
+                                            {{-- <a href="{{ route('payments.edit', $item) }}" class="text-gray-600 hover:opacity-50"><i class="fa-solid fa-pen-to-square"></i></a> --}}
                                             
-                                            @can('banks.checks.delete') 
-                                                @if ($item->state == 1)                                                                                                               
+                                            {{-- @can('banks.payments.delete')  --}}
+                                                {{-- @if ($item->state == 1)                                                                                                                --}}
                                                     <a href="#" wire:click="delete({{ $item }})" class="text-orange-500 hover:opacity-50"><i class="fa-solid fa-trash-can"></i></a>
-                                                @endif 
-                                            @endcan
+                                                {{-- @endif  --}}
+                                            {{-- @endcan --}}
                                         </div>
                                     </td>
                                 </tr>
@@ -161,20 +130,20 @@
     </div>
 
     {{-- Pagination --}}
-    @if ($checks->hasPages())
+    @if ($payments->hasPages())
         <div class="px-4 py-4 bg-white border border-gray-200 mt-2 rounded-md shadow-lg">
-            {{ $checks->links() }}   
+            {{ $payments->links() }}   
         </div>
     @endif   
 
     {{-- Delete conformation modal --}}
     <x-jet-confirmation-modal wire:model="confirmingDeletion">
         <x-slot name="title">
-            Eliminar cheque
+            Eliminar pago
         </x-slot>
     
         <x-slot name="content">
-            ¿Estás seguro de eliminar este cheque?
+            ¿Estás seguro de eliminar este pago?
         </x-slot>
     
         <x-slot name="footer">

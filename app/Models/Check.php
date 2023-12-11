@@ -12,6 +12,9 @@ class Check extends Model
     const ACTIVO = 1;
     const INACTIVO = 0;
 
+    const INPUT = "I";
+    const OUTPUT = "O";
+
     protected $guarded = ['id', 'created_at', 'updated_at'];
     protected $with = ['bank_account','journal', 'expenses'];
 

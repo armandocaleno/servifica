@@ -85,7 +85,7 @@ class Create extends Component
 
     public function render()
     {
-        $bankaccounts = BankAccount::where('company_id', session('company')->id)->get();
+        $bankaccounts = BankAccount::where('company_id', session('company')->id)->where('type', '2')->get();
 
         return view('livewire.checks.create', compact('bankaccounts'));
     }
@@ -142,6 +142,7 @@ class Create extends Component
                     $check = Check::create([
                         'number' => $this->check->number,
                         'date' => $this->check->date,
+                        'type' => "O",
                         'beneficiary' => $this->check->beneficiary,
                         'reference' => $this->check->reference,
                         'total' => $this->check->total,

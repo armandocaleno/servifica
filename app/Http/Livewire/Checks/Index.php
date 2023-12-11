@@ -80,8 +80,6 @@ class Index extends Component
             //Crea el asiento reverso de anulacion
             $journal = $this->check->journal;
 
-            // dd($this->check->journal);
-
             $debit_account =  "";
             $credit_account = "";
 

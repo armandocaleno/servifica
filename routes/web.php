@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\JournalController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Livewire\Checks\Create as ChecksCreate;
@@ -42,7 +43,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/seleccionar-empresa', [SelectCompanyController::class, 'index'])->name('company.select');
     Route::match(['get', 'post'],'/establecer-empresa', [SelectCompanyController::class, 'set'])->name('company.set');
 
-    // Usuarios       
+    //Usuarios       
     Route::resource('admin/users', UserController::class)->except('show')->names('users');
     
     //Transacciones
@@ -53,6 +54,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('transacciones/lotes/store', [TransactionController::class, 'store'])->middleware('can:transactions.charge.create')->name('transactions.lotes.store');
     Route::get('recibo/{id}', [Create::class, 'generatevoucher'])->middleware('can:transactions.collection.voucher')->name('transaction.voucher');
     Route::get('transacciones/pagos/create', [TransactionController::class, 'payment'])->middleware('can:transactions.payment.create')->name('transactions.payment.create');
+    
     //Socios
     Route::get('socios/index', [PartnerController::class, 'index'])->middleware('can:admin.partners.index')->name('partners.index');
     Route::get('socios/create', [PartnerController::class, 'create'])->middleware('can:admin.partners.create')->name('partners.create');
@@ -64,8 +66,8 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('cuentas/index', [AccountController::class, 'index'])->middleware('can:admin.accounts.index')->name('accounts.index');
     Route::get('cuentas/create', [AccountController::class, 'create'])->middleware('can:admin.accounts.create')->name('accounts.create');
     Route::post('cuentas/store', [AccountController::class, 'store'])->middleware('can:admin.accounts.create')->name('accounts.store');
-    Route::get('cuentas/edit/{account}', [AccountController::class, 'edit'])->middleware('can:admin.accounts.edit')->name('accounts.edit');
-    Route::post('cuentas/update', [AccountController::class, 'update'])->middleware('can:admin.accounts.edit')->name('accounts.update');
+    Route::get('cuentas/edit/{account}', [AccountController::class, 'edit'])->middleware('can:admin.accounts.update')->name('accounts.edit');
+    Route::post('cuentas/update', [AccountController::class, 'update'])->middleware('can:admin.accounts.update')->name('accounts.update');
 
     //Reportes
     Route::get('reportes/socios/saldos', [ReportingController::class, 'balances'])->middleware('can:reporting.partners.balance.show')->name('reporting.partners.balances');
@@ -96,18 +98,24 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('asientos-contables/index', [JournalController::class, 'index'])->middleware('can:accounting.journals.index')->name('journals.index');
     Route::get('asientos-contables/crear', [JournalController::class, 'create'])->middleware('can:accounting.journals.create')->name('journals.create');
     Route::get('asientos-contables/editar/{journal}', [JournalController::class, 'edit'])->middleware('can:accounting.journals.edit')->name('journals.edit');
+    Route::get('comprobante-de-asiento/{id}', [JournalController::class, 'generatevoucher'])->name('journals.voucher');
 
     //Bancos
     Route::get('bancos/index', [BankController::class, 'index'])->middleware('can:accounting.banks.index')->name('banks.index');
 
-    // Cuentas Bancarias
+    //Cuentas Bancarias
     Route::get('cuentas-bancarias/index', [BankAccountController::class, 'index'])->middleware('can:accounting.bankaccounts.index')->name('bank-accounts.index');
 
     //Compras y gastos
-    Route::get('compras-gastos/index', [ExpenseController::class, 'index'])->middleware('can:transactions.expenses.index')->name('expenses.index');
+    Route::match(['post', 'get'],'compras-gastos/index', [ExpenseController::class, 'index'])->middleware('can:transactions.expenses.index')->name('expenses.index');
     Route::get('compras-gastos/create', [ExpenseController::class, 'create'])->middleware('can:transactions.expenses.create')->name('expenses.create');
     Route::get('compras-gastos/edit/{expense}', [ExpenseController::class, 'edit'])->middleware('can:transactions.expenses.edit')->name('expenses.edit');
     Route::post('compras-gastos/store', [ExpenseController::class, 'store'])->middleware('can:transactions.expenses.create')->name('expenses.store');
+
+    //Pagos varios
+    Route::get('pagos-varios/nuevo', [PaymentController::class, 'create'])->name('payments.create');
+    Route::match(['post', 'get'],'pagos-varios/index', [PaymentController::class, 'index'])->name('payments.index');
+    Route::get('comprobante-de-egreso/{id}', [PaymentController::class, 'generatevoucher'])->name('payments.voucher');
 
     //Config de cuentas contables
     Route::get('config-cuentas-contables/index', [AccountingConfigController::class, 'index'])->middleware('can:admin.config.accounting.index')->name('accounting.config.index');
@@ -132,7 +140,6 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::match(['get', 'post'],'reportes-financieros/resultados', [ReportingController::class, 'results'])->middleware('can:accounting.balance.show')->name('reporting.results');
     Route::match(['get', 'post'],'reportes-financieros/resultados/pdf', [ReportingController::class, 'results_pdf'])->middleware('can:accounting.balance.export')->name('reporting.results.pdf');
     Route::match(['get', 'post'],'reportes-financieros/mayor', [ReportingController::class, 'ledger'])->middleware('can:accounting.ledger.show')->name('reporting.ledger');
-    // Route::get('reportes/mayor', [ReportingController::class, 'ledger'])->name('reporting.ledger');
     Route::match(['get', 'post'],'reportes-financieros/mayor/pdf', [ReportingController::class, 'ledger_pdf'])->middleware('can:accounting.ledger.export')->name('reporting.ledger.pdf');
 
      //Roles 

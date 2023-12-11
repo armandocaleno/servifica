@@ -16,10 +16,11 @@ class Index extends Component
     public $bankaccount, $openCreateModal, $confirmingDeletion;
 
     protected $rules = [
-        'bankaccount.number' => 'required|unique:bank_accounts,number',
-        'bankaccount.owner' => 'required',
+        'bankaccount.number' => 'nullable|unique:bank_accounts,number',
+        'bankaccount.owner' => 'nullable',
         'bankaccount.type' => 'required',
-        'bankaccount.bank_id' => 'required',
+        'bankaccount.reference' => 'required',
+        'bankaccount.bank_id' => 'nullable',
         'bankaccount.accounting_id' => 'required',
     ];
 
@@ -61,11 +62,11 @@ class Index extends Component
     public function save()
     {
         $rules = $this->rules;
-
+      
         if ($this->bankaccount->id) {
 
             $rules = [
-                'bankaccount.number' => 'required|unique:bank_accounts,number,'. $this->bankaccount->id,
+                'bankaccount.number' => 'nullable|unique:bank_accounts,number,'. $this->bankaccount->id,
             ];
         }
 
@@ -106,7 +107,7 @@ class Index extends Component
         $journals = JournalDetail::where('accounting_id', $this->bankaccount->accounting_id)->get();
        
         if ($journals->count()) {
-            $this->info('No se puede eliminar esta cuenta bancaria porque tiene asociada asientos contables.');
+            $this->info('No se puede eliminar esta cuenta porque tiene asociada asientos contables.');
         }else {
             $this->bankaccount->delete();
 
