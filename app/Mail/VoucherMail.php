@@ -10,16 +10,15 @@ use Illuminate\Queue\SerializesModels;
 class VoucherMail extends Mailable
 {
     use Queueable, SerializesModels;
-    public $partner, $transaction, $company;
+    public $transaction, $company, $path;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($partner, $transaction, $company)
+    public function __construct($transaction, $company)
     {
-        $this->partner = $partner;
         $this->transaction = $transaction;
         $this->company = $company;
     }
@@ -31,6 +30,7 @@ class VoucherMail extends Mailable
      */
     public function build()
     {
-        return $this->view('mails.voucher')->subject('Gracias por su pago!')->attachFromStorage('Comprobante.pdf');
+        $path = 'Pago_' . $this->transaction->number . '.pdf';
+        return $this->view('mails.voucher')->subject('Gracias por su pago!')->attachFromStorage($path);
     }
 }

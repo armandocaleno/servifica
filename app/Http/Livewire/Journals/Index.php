@@ -2,8 +2,10 @@
 
 namespace App\Http\Livewire\Journals;
 
+use Illuminate\Support\Facades\DB;
 use Livewire\WithPagination;
 use App\Models\Journal;
+use App\Models\JournalDetail;
 use Carbon\Carbon;
 use Livewire\Component;
 
@@ -22,6 +24,7 @@ class Index extends Component
         $this->search = "";
         $this->type = "";
     }
+
     public function render()
     {
         if ($this->type != "") {
@@ -71,12 +74,59 @@ class Index extends Component
     function destroy() {
         $this->openDeleteModal = false;
 
-        $this->journal->update([
-            'state' => '0'
-        ]);
-        
-        $this->success('Registro eliminado correctamente.');
+        DB::beginTransaction();
+
+        try {
+            $this->journal->update([
+                'state' => '0'
+            ]);
+
+            // Crea asiento de reverso
+            $newjournal = Journal::create([
+                'number' => $this->GenjournalNumber(),
+                'date' => Carbon::now(),
+                'refence' => 'Anulación de asiento ' . $this->journal->number,
+                'company_id' => session('company')->id,
+                'type' => Journal::AUTO,
+                'journable_id' => 1,
+                'journable_type' => Journal::class
+            ]);
+
+            foreach ($this->journal->details as $item) {
+                $debit = 0; $credit = 0; 
+                if ($item->debit_value > 0) {
+                    $debit = $item->debit_value;
+                }else{
+                    $credit= $item->credit_value;
+                }
+
+                JournalDetail::create([
+                    'journal_id' => $newjournal->id,
+                    'accounting_id' => $item->accounting_id,
+                    'debit_value' => $credit,
+                    'credit_value' => $debit
+                ]);
+            }
+
+            DB::commit();
+
+            $this->success('Registro eliminado correctamente.');
+
+        } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollback();
+            $this->info('Hubo un error y no se anuló el asiento.');
+            $this->info($th->getMessage());
+        }
     }
+
+     //Generar el número de transacción
+     public function GenjournalNumber()
+     {                
+         $j = new Journal();
+         $number = $j->getNumber();
+         return $number;
+     }   
 
     // Mensaje de confirmación de acción
     public function success($message)

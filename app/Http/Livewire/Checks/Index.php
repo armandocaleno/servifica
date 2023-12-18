@@ -80,8 +80,6 @@ class Index extends Component
             //Crea el asiento reverso de anulacion
             $journal = $this->check->journal;
 
-            // dd($this->check->journal);
-
             $debit_account =  "";
             $credit_account = "";
 
@@ -124,7 +122,7 @@ class Index extends Component
             ]);
 
             //Actualiza el estado del cheque
-            $this->check->update(['state' => '0']);
+            $this->check->update(['status' => '0']);
             $this->success('Cheque eliminado correctamente.');
    
             DB::commit();

@@ -186,5 +186,6 @@ return [
         'number'                => 'número',
         'supplier_id'           => 'proveedor',
         'refence'               => 'referencia',
+        'payment.payment_method_id' => 'forma de pago'
     ],
 ];

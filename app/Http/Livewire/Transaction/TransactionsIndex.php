@@ -12,6 +12,11 @@ use Gloudemans\Shoppingcart\Facades\Cart;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+use Illuminate\Support\Arr;
+use PDF;
+use App\Mail\VoucherMail;
+use Illuminate\Support\Facades\Mail;
 
 class TransactionsIndex extends Component
 {
@@ -88,7 +93,7 @@ class TransactionsIndex extends Component
     }
 
     public function destroy()
-    {               
+    {                       
         DB::beginTransaction();
 
         try {
@@ -106,10 +111,20 @@ class TransactionsIndex extends Component
 
             $fecha_actual = date("Y-m-d");
 
+            //COMPROBAR SI LA TRANSACCION TIENE ASIENTO CONTABLE, SINO SE COLOCA UNA NOTA EN LA GLOSA DEL ASIENTO DE REVERSO
+            $note = "";
+
+            foreach ($this->transaction->content as $item) {
+                if (!isset($item['options']['accounting_id'])) {
+                    $note = "(Transaction sin asiento contable)";
+                    break;
+                }
+            }
+    
             $journal = Journal::create([
                 'number' => $number,
                 'date' => $fecha_actual,
-                'refence' => "Anulación Transacción: " .  $this->transaction->number . " - Socio: " . $this->transaction->partner->name,
+                'refence' => "Anulación Transacción: " .  $this->transaction->number . " - Socio: " . $this->transaction->partner->name . " " . $note,
                 'company_id' => session('company')->id,
                 'type' => Journal::AUTO,
                 'journable_id' => $this->transaction->id,
@@ -124,8 +139,9 @@ class TransactionsIndex extends Component
             ]);
 
             foreach ($this->transaction->content as $item) {
-
-                $accounting_id = $item['options']['accounting_id'];
+                
+                $accounting_id = Account::find($item['id'])->accounting_id;
+               
                 JournalDetail::create([
                     'journal_id' => $journal->id,
                     'accounting_id' => $accounting_id,
@@ -182,6 +198,39 @@ class TransactionsIndex extends Component
                 $partner->accounts()->updateExistingPivot($account_partner->id, ['value' => $newtotal]);
             }                     
         }                                        
+    }
+
+    public function generateVoucherEmail($id)
+    {
+        $transaction = Transaction::find($id); //obtiene la transacción 
+    
+        Arr::sort($transaction->voucher);
+        $transaction->date = Carbon::parse($transaction->date)->format('d/m/Y'); //formatea la fecha       
+        $voucher_path = '/app/Pago_'. $transaction->number . '.pdf';
+
+        //genera el pdf con el contenido de la transacción
+        PDF::loadView('transactions.voucher', ['transaction' => $transaction])->save(storage_path(). $voucher_path);
+
+        $this->emailSend($transaction, $voucher_path);
+    }
+
+    function emailSend(Transaction $transaction, $path) {
+        $company = session('company');
+        if ($transaction->partner->email === null || $transaction->partner->email === '') {
+            $this->info('No es posible enviar email. Email no válido.');
+            return;
+        } else {
+            if (Mail::to($transaction->partner->email)->send(new VoucherMail($transaction, $company))) {
+                $this->success('Email enviado!');
+            } else {
+                $this->info('No se pudo enviar el email.');
+            }
+        }
+        
+        // eliminar archivo generado
+        if (file_exists(storage_path().$path)) {
+            unlink(storage_path().$path);
+        }
     }
 
      // Mensaje de confirmación de acción

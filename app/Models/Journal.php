@@ -12,7 +12,7 @@ class Journal extends Model
     const ACTIVO = 1;
     const INACTIVO = 0;
     const AUTO = '1';
-    const MANUAL = '0';
+    const MANUAL = '2';
 
     protected $with = ['details'];
 

@@ -20,7 +20,7 @@
             <select name="" id="" class="py-2 rounded border-gray-400 text-gray-600" wire:model="type">
                 <option value="">Todos</option>
                 <option value="1">Automático</option>
-                <option value="0">Manual</option>
+                <option value="2">Manual</option>
             </select>
         </div>
 
@@ -63,7 +63,7 @@
                                         <button wire:click="showDetail({{ $item }})" class="text-cyan-600 hover:opacity-50"><i class="fa-solid fa-list"></i></button>
                                     </td>
                                     <td class="row space-x-4">
-                                        @if ($item->type == 0)
+                                        @if ($item->type != 1)
                                             @can('accounting.journals.edit') 
                                                 <a href="{{ route('journals.edit', $item) }}" class="hover:opacity-25 text-blue-600"><i class="fa-solid fa-pen-to-square"></i></a>
                                             @endcan
@@ -74,6 +74,8 @@
                                                 </button>
                                             @endcan
                                         @endif
+
+                                        <a href="{{ route('journals.voucher', $item) }}" target="_blank" class="text-red-600 hover:opacity-50"><i class="fa-solid fa-file-pdf"></i></a>
                                     </td>
                                 </tr>   
                             @endforeach

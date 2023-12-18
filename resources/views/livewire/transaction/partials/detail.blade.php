@@ -15,7 +15,7 @@
         
         <div class="flex items-center space-x-2 ">
             <x-jet-label value="Saldo:"/>
-            <x-jet-input type="text" wire:model="saldo" class="text-center w-full md:py-0 rounded border-gray-400 text-gray-700 disabled:bg-gray-200" id="stock" disabled/>
+            <x-jet-input type="text" wire:model.defer="saldo" class="text-center w-full md:py-0 rounded border-gray-400 text-gray-700 disabled:bg-gray-200" id="stock" disabled/>
         </div>
 
         <div class="flex items-center space-x-2">
@@ -25,7 +25,7 @@
                
         <div class="flex items-center space-x-2">
             <x-jet-label value="Monto:"/>
-            <x-jet-input type="text" wire:model="amount"  min="1" max="1000" class="text-center w-full md:py-0 rounded border-gray-400 text-gray-700" />
+            <x-jet-input type="text" wire:model.defer="amount"  min="1" max="1000" class="text-center w-full md:py-0 rounded border-gray-400 text-gray-700" />
         </div> 
 
         <div class="">            

@@ -25,7 +25,7 @@
                 <select class="block sm:py-0 rounded border-gray-400  w-full sm:w-44 xl:w-full text-gray-600" wire:model.defer="check.bank_account_id">
                     <option value="-1"></option>
                     @foreach ($bankaccounts as $item)
-                        <option value="{{ $item->id }}">{{ $item->number }} - {{ $item->bank->name }}</option>                    
+                        <option value="{{ $item->id }}">{{ $item->reference }}</option>                    
                     @endforeach
                 </select>                     
             </div>
