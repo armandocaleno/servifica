@@ -122,7 +122,7 @@
                                     </td>
 
                                     <td class="row">
-                                        @if ($item->state == 1)
+                                        @if ($item->status == 1)
                                             Activo
                                         @else
                                             Anulado
@@ -137,7 +137,7 @@
                                             {{-- <a href="{{ route('checks.edit', $item) }}" class="text-gray-600 hover:opacity-50"><i class="fa-solid fa-pen-to-square"></i></a> --}}
                                             
                                             @can('banks.checks.delete') 
-                                                @if ($item->state == 1)                                                                                                               
+                                                @if ($item->status == 1)                                                                                                               
                                                     <a href="#" wire:click="delete({{ $item }})" class="text-orange-500 hover:opacity-50"><i class="fa-solid fa-trash-can"></i></a>
                                                 @endif 
                                             @endcan
