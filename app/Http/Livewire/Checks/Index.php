@@ -122,7 +122,7 @@ class Index extends Component
             ]);
 
             //Actualiza el estado del cheque
-            $this->check->update(['state' => '0']);
+            $this->check->update(['status' => '0']);
             $this->success('Cheque eliminado correctamente.');
    
             DB::commit();
