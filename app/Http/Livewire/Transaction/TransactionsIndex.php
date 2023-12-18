@@ -93,7 +93,7 @@ class TransactionsIndex extends Component
     }
 
     public function destroy()
-    {               
+    {                       
         DB::beginTransaction();
 
         try {
@@ -111,10 +111,20 @@ class TransactionsIndex extends Component
 
             $fecha_actual = date("Y-m-d");
 
+            //COMPROBAR SI LA TRANSACCION TIENE ASIENTO CONTABLE, SINO SE COLOCA UNA NOTA EN LA GLOSA DEL ASIENTO DE REVERSO
+            $note = "";
+
+            foreach ($this->transaction->content as $item) {
+                if (!isset($item['options']['accounting_id'])) {
+                    $note = "(Transaction sin asiento contable)";
+                    break;
+                }
+            }
+    
             $journal = Journal::create([
                 'number' => $number,
                 'date' => $fecha_actual,
-                'refence' => "Anulación Transacción: " .  $this->transaction->number . " - Socio: " . $this->transaction->partner->name,
+                'refence' => "Anulación Transacción: " .  $this->transaction->number . " - Socio: " . $this->transaction->partner->name . " " . $note,
                 'company_id' => session('company')->id,
                 'type' => Journal::AUTO,
                 'journable_id' => $this->transaction->id,
@@ -129,8 +139,9 @@ class TransactionsIndex extends Component
             ]);
 
             foreach ($this->transaction->content as $item) {
-
-                $accounting_id = $item['options']['accounting_id'];
+                
+                $accounting_id = Account::find($item['id'])->accounting_id;
+               
                 JournalDetail::create([
                     'journal_id' => $journal->id,
                     'accounting_id' => $accounting_id,
