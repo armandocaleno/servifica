@@ -43,7 +43,7 @@ class Lotes extends Component
 
     public function partnersLoad()
     {
-        if ($this->amount < 1) {
+        if ($this->amount == 0) {
             $this->info('Monto incorrecto!');    
             return;
         }

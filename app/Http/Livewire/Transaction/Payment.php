@@ -125,7 +125,7 @@ class Payment extends Component
     {
         $newtotal = "";
 
-        if ($this->amount < 1) {
+        if ($this->amount == 0) {
             $this->info('Monto incorrecto!');    
             return;
         }

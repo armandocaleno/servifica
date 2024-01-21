@@ -212,7 +212,7 @@ class Create extends Component
 
     public function addAccount()
     {
-        if ($this->value < 1) {
+        if ($this->value == 0) {
             $this->info('Monto incorrecto!');
             return;
         }
