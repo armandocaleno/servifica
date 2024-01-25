@@ -150,9 +150,11 @@ class Create extends Component
     public function save()
     {
         if (floatVal($this->total_debe) != floatVal($this->total_haber)) {
-            // $this->info('Los totales del debe y el haber no cuadran.'); 
-            // return;
+            $this->info('Los totales del debe y el haber no cuadran.'); 
+            return;
         }
+
+        // dd('done');
         $this->validate();
 
         if ($this->journal->id) {

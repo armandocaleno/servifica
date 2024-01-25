@@ -62,7 +62,7 @@
                                     <td class="row">
                                         <button wire:click="showDetail({{ $item }})" class="text-cyan-600 hover:opacity-50"><i class="fa-solid fa-list"></i></button>
                                     </td>
-                                    <td class="row space-x-4">
+                                    <td class="row space-x-4 whitespace-nowrap">
                                         @if ($item->type != 1)
                                             @can('accounting.journals.edit') 
                                                 <a href="{{ route('journals.edit', $item) }}" class="hover:opacity-25 text-blue-600"><i class="fa-solid fa-pen-to-square"></i></a>

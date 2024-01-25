@@ -4,13 +4,13 @@ namespace App\Http\Livewire\Reporting;
 
 use App\Models\Accounting;
 use Illuminate\Support\Facades\DB;
-use PDF;
 use Livewire\Component;
 
 class Results extends Component
 {
-    public $level_global = 4;
+    public $level_global = 5;
     public $from, $to;
+    public $level = 5;
 
     public function render()
     {
@@ -26,18 +26,19 @@ class Results extends Component
      // CALCULA LOS INGRESOS
      function ingresos($from, $to){
         
-        // $cuentas_ingresos = Accounting::where('account_class_id', '4')
-        //                             ->where('group', '1')->get();
+        $cuentas_ingresos = Accounting::where('account_class_id', '4')
+                                    ->where('group', '1')->get();
 
         $accountings = DB::table('journal_details')
                     ->join('accountings', 'journal_details.accounting_id', '=', 'accountings.id')
                     ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
-                    ->selectRaw('accountings.id, accountings.parent_id, accountings.level, accountings.code, accountings.name, accountings.account_class_id, accountings.account_type_id, sum(debit_value) as total_debe, sum(credit_value) as total_haber')
-                    ->groupBy('accountings.id', 'accountings.parent_id', 'accountings.level','accountings.code', 'accountings.name', 'accountings.account_class_id', 'accountings.account_type_id')
+                    ->selectRaw('accountings.id, accountings.parent_id, accountings.level, accountings.group, accountings.code, accountings.name, accountings.account_class_id, accountings.account_type_id, sum(debit_value) as total_debe, sum(credit_value) as total_haber')
+                    ->groupBy('accountings.id', 'accountings.parent_id', 'accountings.level', 'accountings.group', 'accountings.code', 'accountings.name', 'accountings.account_class_id', 'accountings.account_type_id')
                     ->where('accountings.company_id', '=', session('company')->id)
                     ->where('journals.state', '=', 1)
                     ->whereBetween('journals.date', [$from, $to])
                     ->where('accountings.account_class_id', '=', '4')
+                    ->orderBy('accountings.code', 'asc')
                     ->get();
         
         $acc = [];
@@ -48,9 +49,10 @@ class Results extends Component
         foreach ($accountings as $value) {
             $acc['id'] = $value->id;
             $acc['codigo'] = $value->code;
-            $acc['cuenta'] = $value->name;
+            $acc['cuenta'] = strtolower($value->name);
             $acc['padre'] = $value->parent_id;
             $acc['nivel'] = $value->level;
+            $acc['grupo'] = $value->group;
         
             // OPERACION DEPENDIENDO LA NATURALEZA DE LA CUENTA (DEUDORA O ACREEDORA)
             if ($value->account_type_id == 1) {
@@ -64,20 +66,47 @@ class Results extends Component
             }
         }
 
+        // CALCULA LOS TOTALES DE LAS CUENTAS DE GRUPO
+        for ($i = $this->level_global - 1; $i >= 1; $i--) {
+            foreach ($cuentas_ingresos as $value) {
+                if ($value->level == $i) {
+                    $acc['id'] = $value->id;
+                    $acc['codigo'] = $value->code;
+                    $acc['cuenta'] = $value->name;
+                    $acc['padre'] = $value->parent_id;
+                    $acc['nivel'] = $value->level;
+                    $acc['grupo'] = $value->group;
+                    $acc['total'] = 0;
+
+                    foreach ($ingresos as $v) {
+                        if ($v['padre'] == $value->id) {
+                            $acc['total'] += $v['total'];
+                        }
+                    }
+
+                    if ($acc['total'] != 0) {
+                        $ingresos[] = $acc;
+                    }
+                }
+            }
+        }
+
+        $ingresos = $this->sort($ingresos);
+
         return $ingresos;
     }
 
      // CALCULA OTROS INGRESOS
     function otros_ingresos($from, $to){
         
-        // $cuentas_otros_ingresos = Accounting::where('account_class_id', '5')
-        //                             ->where('group', '1')->get();
+        $cuentas_otros_ingresos = Accounting::where('account_class_id', '5')
+                                    ->where('group', '1')->get();
 
         $accountings = DB::table('journal_details')
                     ->join('accountings', 'journal_details.accounting_id', '=', 'accountings.id')
                     ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
-                    ->selectRaw('accountings.id, accountings.parent_id, accountings.level, accountings.code, accountings.name, accountings.account_class_id, accountings.account_type_id, sum(debit_value) as total_debe, sum(credit_value) as total_haber')
-                    ->groupBy('accountings.id', 'accountings.parent_id', 'accountings.level','accountings.code', 'accountings.name', 'accountings.account_class_id', 'accountings.account_type_id')
+                    ->selectRaw('accountings.id, accountings.parent_id, accountings.level, accountings.group, accountings.code, accountings.name, accountings.account_class_id, accountings.account_type_id, sum(debit_value) as total_debe, sum(credit_value) as total_haber')
+                    ->groupBy('accountings.id', 'accountings.parent_id', 'accountings.level', 'accountings.group', 'accountings.code', 'accountings.name', 'accountings.account_class_id', 'accountings.account_type_id')
                     ->where('accountings.company_id', '=', session('company')->id)
                     ->where('journals.state', '=', 1)
                     ->whereBetween('journals.date', [$from, $to])
@@ -92,9 +121,10 @@ class Results extends Component
         foreach ($accountings as $value) {
             $acc['id'] = $value->id;
             $acc['codigo'] = $value->code;
-            $acc['cuenta'] = $value->name;
+            $acc['cuenta'] = strtolower($value->name);
             $acc['padre'] = $value->parent_id;
             $acc['nivel'] = $value->level;
+            $acc['grupo'] = $value->group;
         
             // OPERACION DEPENDIENDO LA NATURALEZA DE LA CUENTA (DEUDORA O ACREEDORA)
             if ($value->account_type_id == 1) {
@@ -108,23 +138,51 @@ class Results extends Component
             }
         }
 
+        // CALCULA LOS TOTALES DE LAS CUENTAS DE GRUPO
+        for ($i = $this->level_global - 1; $i >= 1; $i--) {
+            foreach ($cuentas_otros_ingresos as $value) {
+                if ($value->level == $i) {
+                    $acc['id'] = $value->id;
+                    $acc['codigo'] = $value->code;
+                    $acc['cuenta'] = $value->name;
+                    $acc['padre'] = $value->parent_id;
+                    $acc['nivel'] = $value->level;
+                    $acc['grupo'] = $value->group;
+                    $acc['total'] = 0;
+
+                    foreach ($ingresos as $v) {
+                        if ($v['padre'] == $value->id) {
+                            $acc['total'] += $v['total'];
+                        }
+                    }
+
+                    if ($acc['total'] != 0) {
+                        $ingresos[] = $acc;
+                    }
+                }
+            }
+        }
+
+        $ingresos = $this->sort($ingresos);
+
         return $ingresos;
     }
 
     // CALCULA LOS COSTOS DE VENTA
     function costos($from, $to){
-        
-        $cuentas_costo_ventas = Accounting::where('account_class_id', '6')
+        $cuentas_gastos = Accounting::where('account_class_id', '6')
                                     ->where('group', '1')->get();
 
         $accountings = DB::table('journal_details')
                     ->join('accountings', 'journal_details.accounting_id', '=', 'accountings.id')
                     ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
-                    ->selectRaw('accountings.id, accountings.parent_id, accountings.level, accountings.code, accountings.name, accountings.account_class_id, accountings.account_type_id, sum(debit_value) as total_debe, sum(credit_value) as total_haber')
-                    ->groupBy('accountings.id', 'accountings.parent_id', 'accountings.level','accountings.code', 'accountings.name', 'accountings.account_class_id', 'accountings.account_type_id')
+                    ->selectRaw('accountings.id, accountings.parent_id, accountings.level, accountings.group, accountings.code, accountings.name, accountings.account_class_id, accountings.account_type_id, sum(debit_value) as total_debe, sum(credit_value) as total_haber')
+                    ->groupBy('accountings.id', 'accountings.parent_id', 'accountings.level', 'accountings.group', 'accountings.code', 'accountings.name', 'accountings.account_class_id', 'accountings.account_type_id')
                     ->where('accountings.company_id', '=', session('company')->id)
+                    ->where('journals.state', '=', 1)
                     ->whereBetween('journals.date', [$from, $to])
                     ->where('accountings.account_class_id', '=', '6')
+                    ->orderBy('accountings.code', 'asc')
                     ->get();
         
         $acc = [];
@@ -135,9 +193,10 @@ class Results extends Component
         foreach ($accountings as $value) {
             $acc['id'] = $value->id;
             $acc['codigo'] = $value->code;
-            $acc['cuenta'] = $value->name;
+            $acc['cuenta'] = strtolower($value->name);
             $acc['padre'] = $value->parent_id;
             $acc['nivel'] = $value->level;
+            $acc['grupo'] = $value->group;
         
             // OPERACION DEPENDIENDO LA NATURALEZA DE LA CUENTA (DEUDORA O ACREEDORA)
             if ($value->account_type_id == 1) {
@@ -151,37 +210,68 @@ class Results extends Component
             }
         }
 
+         // CALCULA LOS TOTALES DE LAS CUENTAS DE GRUPO
+         for ($i = $this->level_global - 1; $i >= 1; $i--) {
+            foreach ($cuentas_gastos as $value) {
+                if ($value->level == $i) {
+                    $acc['id'] = $value->id;
+                    $acc['codigo'] = $value->code;
+                    $acc['cuenta'] = $value->name;
+                    $acc['padre'] = $value->parent_id;
+                    $acc['nivel'] = $value->level;
+                    $acc['grupo'] = $value->group;
+                    $acc['total'] = 0;
+
+                    foreach ($costos as $v) {
+                        if ($v['padre'] == $value->id) {
+                            $acc['total'] += $v['total'];
+                        }
+                    }
+
+                    if ($acc['total'] != 0) {
+                        $costos[] = $acc;
+                    }
+                }
+            }
+        }
+
+        $costos = $this->sort($costos);
+
         return $costos;
     }
 
     // CALCULA LOS GASTOS
     function gastos($from, $to){
-        
+
         $cuentas_gastos = Accounting::where('account_class_id', '7')
+                                    ->where('account_subclass_id', '=', null)
                                     ->where('group', '1')->get();
 
         $accountings = DB::table('journal_details')
                     ->join('accountings', 'journal_details.accounting_id', '=', 'accountings.id')
                     ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
-                    ->selectRaw('accountings.id, accountings.parent_id, accountings.level, accountings.code, accountings.name, accountings.account_class_id, accountings.account_subclass_id, accountings.account_type_id, sum(debit_value) as total_debe, sum(credit_value) as total_haber')
-                    ->groupBy('accountings.id', 'accountings.parent_id', 'accountings.level','accountings.code', 'accountings.name', 'accountings.account_class_id', 'accountings.account_subclass_id', 'accountings.account_type_id')
+                    ->selectRaw('accountings.id, accountings.parent_id, accountings.level, accountings.group, accountings.code, accountings.name, accountings.account_class_id, accountings.account_subclass_id, accountings.account_type_id, sum(debit_value) as total_debe, sum(credit_value) as total_haber')
+                    ->groupBy('accountings.id', 'accountings.parent_id', 'accountings.level', 'accountings.group', 'accountings.code', 'accountings.name', 'accountings.account_class_id', 'accountings.account_subclass_id', 'accountings.account_type_id')
                     ->where('accountings.company_id', '=', session('company')->id)
+                    ->where('journals.state', '=', 1)
                     ->whereBetween('journals.date', [$from, $to])
                     ->where('accountings.account_class_id', '=', '7')
                     ->where('accountings.account_subclass_id', '=', null)
+                    ->orderBy('accountings.code', 'asc')
                     ->get();
         
         $acc = [];
         $gastos = [];
         $acc['total'] = 0;
-        // dd($accountings);
+   
         // AGREGA LAS CUENTAS DE DETALLE
         foreach ($accountings as $value) {
             $acc['id'] = $value->id;
             $acc['codigo'] = $value->code;
-            $acc['cuenta'] = $value->name;
+            $acc['cuenta'] = strtolower($value->name);
             $acc['padre'] = $value->parent_id;
             $acc['nivel'] = $value->level;
+            $acc['grupo'] = $value->group;
         
             // OPERACION DEPENDIENDO LA NATURALEZA DE LA CUENTA (DEUDORA O ACREEDORA)
             if ($value->account_type_id == 1) {
@@ -195,62 +285,51 @@ class Results extends Component
             }
         }
 
-      
         // CALCULA LOS TOTALES DE LAS CUENTAS DE GRUPO
-        // for ($i = $this->level_global - 1; $i >= 1; $i--) { 
-        //     foreach ($cuentas_gastos as $value) {
-        //         if ($value->level == $i)  {
-        //             $acc['id'] = $value->id;
-        //             $acc['codigo'] = $value->code;
-        //             $acc['cuenta'] = $value->name;
-        //             $acc['padre'] = $value->parent_id;
-        //             $acc['nivel'] = $value->level;
-        //             $acc['total'] = 0;
-    
-        //             foreach ($gastos as $v) {
-        //                 if ($v['padre'] == $value->id) {
-        //                     $acc['total'] += $v['total'];
-        //                 }
-        //             }
+        for ($i = $this->level_global - 1; $i >= 1; $i--) {
+            foreach ($cuentas_gastos as $value) {
+                if ($value->level == $i) {
+                    $acc['id'] = $value->id;
+                    $acc['codigo'] = $value->code;
+                    $acc['cuenta'] = $value->name;
+                    $acc['padre'] = $value->parent_id;
+                    $acc['nivel'] = $value->level;
+                    $acc['grupo'] = $value->group;
+                    $acc['total'] = 0;
 
-        //             if ($acc['total'] != 0) {
-        //                 $gastos[] = $acc;
-        //             }
-                    
-        //         }
-        //     }
-        // }
+                    foreach ($gastos as $v) {
+                        if ($v['padre'] == $value->id) {
+                            $acc['total'] += $v['total'];
+                        }
+                    }
 
-        // $gastos = $this->sort($gastos);
+                    if ($acc['total'] != 0) {
+                        $gastos[] = $acc;
+                    }
+                }
+            }
+        }
+
+        $gastos = $this->sort($gastos);
+
         return $gastos;
     }
 
     // CALCULA LOS IMPUESTOS
     function impuestos($from, $to){
-        
-        $cuentas_impuestos = Accounting::where('account_class_id', '7')
-                                    ->where('group', '1')->get();
+        $cuentas_impuestos = Accounting::where('account_subclass_id', '4')
+        ->where('group', '1')->get();
 
-        // $accountings = DB::table('journal_details')
-        //             ->join('accountings', 'journal_details.accounting_id', '=', 'accountings.id')
-        //             ->join('account_classes', 'account_classes.id', '=', 'accountings.account_class_id')
-        //             ->join('account_subclasses', 'account_classes.id', '=', 'account_subclasses.account_class_id')
-        //             ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
-        //             ->selectRaw('accountings.id, accountings.parent_id, accountings.level, accountings.code, accountings.name, accountings.account_class_id, accountings.account_type_id, account_subclasses.id, sum(debit_value) as total_debe, sum(credit_value) as total_haber')
-        //             ->groupBy('accountings.id', 'accountings.parent_id', 'accountings.level','accountings.code', 'accountings.name', 'accountings.account_class_id', 'accountings.account_type_id', 'account_subclasses.id')
-        //             ->where('accountings.company_id', '=', session('company')->id)
-        //             ->whereBetween('journals.date', [$from, $to])
-        //             // ->where('accountings.account_class_id', '=', '7')
-        //             ->where('account_subclasses.id', '=', '4')
-        //             ->get();
         $accountings = DB::table('journal_details')
                     ->join('accountings', 'journal_details.accounting_id', '=', 'accountings.id')
                     ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
-                    ->selectRaw('accountings.id, accountings.parent_id, accountings.level, accountings.code, accountings.name, accountings.account_class_id, accountings.account_type_id, accountings.account_subclass_id, sum(debit_value) as total_debe, sum(credit_value) as total_haber')
-                    ->groupBy('accountings.id', 'accountings.parent_id', 'accountings.level','accountings.code', 'accountings.name', 'accountings.account_class_id', 'accountings.account_type_id', 'accountings.account_subclass_id')
+                    ->selectRaw('accountings.id, accountings.parent_id, accountings.level, accountings.group, accountings.code, accountings.name, accountings.account_class_id, accountings.account_type_id, accountings.account_subclass_id, sum(debit_value) as total_debe, sum(credit_value) as total_haber')
+                    ->groupBy('accountings.id', 'accountings.parent_id', 'accountings.level', 'accountings.group', 'accountings.code', 'accountings.name', 'accountings.account_class_id', 'accountings.account_type_id', 'accountings.account_subclass_id')
                     ->where('accountings.company_id', '=', session('company')->id)
+                    ->where('journals.state', '=', 1)
                     ->whereBetween('journals.date', [$from, $to])
                     ->where('accountings.account_subclass_id', '=', '4')
+                    ->orderBy('accountings.code', 'asc')
                     ->get();
    
         $acc = [];
@@ -261,9 +340,10 @@ class Results extends Component
         foreach ($accountings as $value) {
             $acc['id'] = $value->id;
             $acc['codigo'] = $value->code;
-            $acc['cuenta'] = $value->name;
+            $acc['cuenta'] = strtolower($value->name);
             $acc['padre'] = $value->parent_id;
             $acc['nivel'] = $value->level;
+            $acc['grupo'] = $value->group;
         
             // OPERACION DEPENDIENDO LA NATURALEZA DE LA CUENTA (DEUDORA O ACREEDORA)
             if ($value->account_type_id == 1) {
@@ -277,32 +357,33 @@ class Results extends Component
             }
         }
 
-      
         // CALCULA LOS TOTALES DE LAS CUENTAS DE GRUPO
-        // for ($i = $this->level_global - 1; $i >= 1; $i--) { 
-        //     foreach ($cuentas_impuestos as $value) {
-        //         if ($value->level == $i)  {
-        //             $acc['id'] = $value->id;
-        //             $acc['codigo'] = $value->code;
-        //             $acc['cuenta'] = $value->name;
-        //             $acc['padre'] = $value->parent_id;
-        //             $acc['nivel'] = $value->level;
-        //             $acc['total'] = 0;
-    
-        //             foreach ($impuestos as $v) {
-        //                 if ($v['padre'] == $value->id) {
-        //                     $acc['total'] += $v['total'];
-        //                 }
-        //             }
+        for ($i = $this->level_global - 1; $i >= 1; $i--) {
+            foreach ($cuentas_impuestos as $value) {
+                if ($value->level == $i) {
+                    $acc['id'] = $value->id;
+                    $acc['codigo'] = $value->code;
+                    $acc['cuenta'] = $value->name;
+                    $acc['padre'] = $value->parent_id;
+                    $acc['nivel'] = $value->level;
+                    $acc['grupo'] = $value->group;
+                    $acc['total'] = 0;
 
-        //             if ($acc['total'] != 0) {
-        //                 $impuestos[] = $acc;
-        //             }
-                    
-        //         }
-        //     }
-        // }
-        // $impuestos = $this->sort($impuestos);
+                    foreach ($impuestos as $v) {
+                        if ($v['padre'] == $value->id) {
+                            $acc['total'] += $v['total'];
+                        }
+                    }
+
+                    if ($acc['total'] != 0) {
+                        $impuestos[] = $acc;
+                    }
+                }
+            }
+        }
+
+        $impuestos = $this->sort($impuestos);
+
         return $impuestos;
     }
 
@@ -318,6 +399,7 @@ class Results extends Component
                 $ac['padre'] = $a['padre'];
                 $ac['nivel'] = $a['nivel'];
                 $ac['total'] = $a['total'];
+                $ac['grupo'] = $a['grupo'];
                 $sorted_array[] = $ac;
 
                 $ac = [];
@@ -329,6 +411,7 @@ class Results extends Component
                         $ac['padre'] = $b['padre'];
                         $ac['nivel'] = $b['nivel'];
                         $ac['total'] = $b['total'];
+                        $ac['grupo'] = $b['grupo'];
 
                         $sorted_array[] = $ac;
                         
@@ -341,6 +424,7 @@ class Results extends Component
                                 $ac['padre'] = $c['padre'];
                                 $ac['nivel'] = $c['nivel'];
                                 $ac['total'] = $c['total'];
+                                $ac['grupo'] = $c['grupo'];
                                 $sorted_array[] = $ac;
                 
                                 foreach ($arr as $d) {
@@ -351,6 +435,7 @@ class Results extends Component
                                         $ac['padre'] = $d['padre'];
                                         $ac['nivel'] = $d['nivel'];
                                         $ac['total'] = $d['total'];
+                                        $ac['grupo'] = $d['grupo'];
                 
                                         $sorted_array[] = $ac;
                                         $ac = [];
@@ -365,6 +450,7 @@ class Results extends Component
                                                 $ac['padre'] = $e['padre'];
                                                 $ac['nivel'] = $e['nivel'];
                                                 $ac['total'] = $e['total'];
+                                                $ac['grupo'] = $e['grupo'];
                         
                                                 $sorted_array[] = $ac;
                                                 $ac = [];

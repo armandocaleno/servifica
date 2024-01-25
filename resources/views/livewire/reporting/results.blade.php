@@ -13,41 +13,56 @@
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-4">
                 {{-- from --}}
                 <div>
-                    <x-jet-label value="Desde" />                
-                    <input type="date" name="from" class="block py-0 px-4 rounded -gray-400 w-full text-gray-700" wire:model="from">
+                    <x-jet-label value="Desde" />
+                    <input type="date" name="from" class="block py-0 px-4 rounded -gray-400 w-full text-gray-700"
+                        wire:model="from">
                 </div>
-                
+
                 {{-- to --}}
                 <div>
-                    <x-jet-label value="Hasta" />                
-                    <input type="date" name="to" class="block py-0 rounded -gray-400 w-full text-gray-700" wire:model="to">
+                    <x-jet-label value="Hasta" />
+                    <input type="date" name="to" class="block py-0 rounded -gray-400 w-full text-gray-700"
+                        wire:model="to">
                 </div>
 
                 {{-- TYPE --}}
                 <div class="">
-                    <x-jet-label for="type" value="Tipo"/>
+                    <x-jet-label for="type" value="Tipo" />
                     <div>
                         <select name="type" class="py-0 rounded border-gray-400 w-full text-gray-600" id="type">
-                            <option value="pdf">PDF</option>                            
-                            <option value="excel">Excel</option>  
-                        </select> 
-                    </div>                                                    
-                </div>  
+                            <option value="pdf">PDF</option>
+                            <option value="excel">Excel</option>
+                        </select>
+                    </div>
+                </div>
+
+                {{-- LEVEL --}}
+                <div class="">
+                    <x-jet-label for="level" value="Niveles" />
+                    <div>
+                        <select name="level" class="py-0 rounded border-gray-400 w-full text-gray-600" id="level"
+                            wire:model="level">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                </div>
                 @can('accounting.balance.export')
-                    
-                
-                <button type="submit" class="px-4 py-2 mt-2 bg-orange-500 rounded-md font-semibold text-white shadow-md hover:bg-opacity-80 
-                                            focus:outline-none focus:ring active:text-gray-700 disabled:opacity-25 transition"
-                                            >Exportar
-                </button>
+                    <button type="submit"
+                        class="px-4 py-2 mt-2 bg-orange-500 rounded-md font-semibold text-white shadow-md hover:bg-opacity-80 
+                                            focus:outline-none focus:ring active:text-gray-700 disabled:opacity-25 transition">Exportar
+                    </button>
                 @endcan
             </div>
         </form>
     </div>
 
-    <div class="grid grid-cols-2 gap-4">
+    <div class="grid grid-cols-4 gap-4">
         {{-- ingresos --}}
-        <div class="">
+        <div class=" col-span-3">
             <table class="w-full text-sm">
                 <thead>
                     <tr>
@@ -59,16 +74,18 @@
                 <tbody>
                     @foreach ($ingresos as $item)
                         @php
-                        // if ($item['nivel'] == 1) {
-                        //     $total_ingresos = $item['total'];
-                        // }
-                        $total_ingresos += $item['total'];
+                            if ($item['nivel'] == 1) {
+                                $total_ingresos = $item['total'];
+                            }
                         @endphp
-                        <tr>
-                            <td class=" w-28">{{ $item['codigo'] }}</td>
-                            <td class=" lowercase">{{ $item['cuenta'] }}</td>
-                            <td class=" text-right">$ {{ number_format($item['total'], 2) }}</td>
-                        </tr>
+
+                        @if ($item['nivel'] <= $level)
+                            <tr :class="{{ $item['grupo'] }} ? 'uppercase font-semibold' : ' capitalize'">
+                                <td class=" w-28" :class="{{ $item['grupo'] }} ? '' : ' pl-2'">{{ $item['codigo'] }}</td>
+                                <td class=" " :class="{{ $item['grupo'] }} ? '' : ' pl-2'">{{ $item['cuenta'] }}</td>
+                                <td class="text-right">$ {{ number_format($item['total'], 2) }}</td>
+                            </tr>
+                        @endif
                     @endforeach
                 </tbody>
                 <tfoot>
@@ -83,7 +100,7 @@
         <div></div>
 
         {{-- costos --}}
-        <div>
+        <div class=" col-span-3">
             <table class="w-full text-sm">
                 <thead>
                     <tr>
@@ -93,19 +110,21 @@
                     </tr>
                 </thead>
                 <tbody>
-                    
+
                     @foreach ($costos as $item)
                         @php
-                        // if ($item['nivel'] == 1) {
-                        //     $total_costos = $item['total'];
-                        // }
-                        $total_costos += $item['total'];
+                            if ($item['nivel'] == 1) {
+                                $total_costos = $item['total'];
+                            }
                         @endphp
-                        <tr class="">
-                            <td class=" w-28">{{ $item['codigo'] }}</td>
-                            <td class=" lowercase">{{ $item['cuenta'] }}</td>
-                            <td class=" text-right">$ {{ number_format($item['total'], 2) }}</td>
-                        </tr>
+
+                        @if ($item['nivel'] <= $level)
+                            <tr :class="{{ $item['grupo'] }} ? 'uppercase font-semibold' : ' capitalize'">
+                                <td class=" w-28" :class="{{ $item['grupo'] }} ? '' : ' pl-2'">{{ $item['codigo'] }}</td>
+                                <td class=" " :class="{{ $item['grupo'] }} ? '' : ' pl-2'">{{ $item['cuenta'] }}</td>
+                                <td class="text-right">$ {{ number_format($item['total'], 2) }}</td>
+                            </tr>
+                        @endif
                     @endforeach
                 </tbody>
                 <tfoot>
@@ -125,7 +144,7 @@
         <div></div>
 
         {{-- gastos --}}
-        <div>
+        <div class=" col-span-3">
             <table class="w-full text-sm">
                 <thead>
                     <tr>
@@ -135,19 +154,20 @@
                     </tr>
                 </thead>
                 <tbody>
-                    
+
                     @foreach ($gastos as $item)
                         @php
-                        // if ($item['nivel'] == 1) {
-                        //     $total_gastos = $item['total'];
-                        // }
-                        $total_gastos += $item['total'];
+                            if ($item['nivel'] == 1) {
+                                $total_gastos = $item['total'];
+                            }
                         @endphp
-                        <tr class="">
-                            <td class=" w-28">{{ $item['codigo'] }}</td>
-                            <td class=" lowercase">{{ $item['cuenta'] }}</td>
-                            <td class=" text-right">$ {{ number_format($item['total'], 2) }}</td>
-                        </tr>
+                        @if ($item['nivel'] <= $level)
+                            <tr :class="{{ $item['grupo'] }} ? 'uppercase font-semibold' : ' capitalize'">
+                                <td class=" w-28" :class="{{ $item['grupo'] }} ? '' : ' pl-2'">{{ $item['codigo'] }}</td>
+                                <td class=" " :class="{{ $item['grupo'] }} ? '' : ' pl-2'">{{ $item['cuenta'] }}</td>
+                                <td class="text-right">$ {{ number_format($item['total'], 2) }}</td>
+                            </tr>
+                        @endif
                     @endforeach
                 </tbody>
                 <tfoot>
@@ -167,8 +187,7 @@
         <div></div>
 
         {{-- otros ingresos --}}
-        <div class="">
-            {{-- Pasivo --}}
+        <div class="col-span-3">
             <table class="w-full text-sm mb-4">
                 <thead>
                     <tr>
@@ -178,19 +197,20 @@
                     </tr>
                 </thead>
                 <tbody>
-                    
+
                     @foreach ($otros_ingresos as $item)
                         @php
-                        // if ($item['nivel'] == 1) {
-                        //     $total_otros_ingresos = $item['total'];
-                        // }
-                        $total_otros_ingresos += $item['total'];
+                            if ($item['nivel'] == 1) {
+                                $total_otros_ingresos = $item['total'];
+                            }
                         @endphp
-                        <tr>
-                            <td class=" w-28">{{ $item['codigo'] }}</td>
-                            <td class=" lowercase">{{ $item['cuenta'] }}</td>
-                            <td class=" text-right">$ {{ number_format($item['total'], 2) }}</td>
-                        </tr>
+                        @if ($item['nivel'] <= $level)
+                            <tr :class="{{ $item['grupo'] }} ? 'uppercase font-semibold' : ' capitalize'">
+                                <td class=" w-28" :class="{{ $item['grupo'] }} ? '' : ' pl-2'">{{ $item['codigo'] }}</td>
+                                <td class=" " :class="{{ $item['grupo'] }} ? '' : ' pl-2'">{{ $item['cuenta'] }}</td>
+                                <td class="text-right">$ {{ number_format($item['total'], 2) }}</td>
+                            </tr>
+                        @endif
                     @endforeach
                 </tbody>
                 <tfoot>
@@ -210,7 +230,7 @@
         <div></div>
 
         {{-- impuestos --}}
-        <div class="">
+        <div class="col-span-3">
             <table class="w-full text-sm mb-4">
                 <thead>
                     <tr>
@@ -220,19 +240,20 @@
                     </tr>
                 </thead>
                 <tbody>
-                    
+
                     @foreach ($impuestos as $item)
                         @php
-                        // if ($item['nivel'] == 1) {
-                        //     $total_impuestos = $item['total'];
-                        // }
-                        $total_impuestos += $item['total'];
+                            if ($item['nivel'] == 1) {
+                                $total_impuestos = $item['total'];
+                            }
                         @endphp
-                        <tr>
-                            <td class=" w-28">{{ $item['codigo'] }}</td>
-                            <td class=" lowercase">{{ $item['cuenta'] }}</td>
-                            <td class=" text-right">$ {{ number_format($item['total'], 2) }}</td>
-                        </tr>
+                        @if ($item['nivel'] <= $level)
+                            <tr :class="{{ $item['grupo'] }} ? 'uppercase font-semibold' : ' capitalize'">
+                                <td class=" w-28" :class="{{ $item['grupo'] }} ? '' : ' pl-2'">{{ $item['codigo'] }}</td>
+                                <td class=" " :class="{{ $item['grupo'] }} ? '' : ' pl-2'">{{ $item['cuenta'] }}</td>
+                                <td class="text-right">$ {{ number_format($item['total'], 2) }}</td>
+                            </tr>
+                        @endif
                     @endforeach
                 </tbody>
                 <tfoot>

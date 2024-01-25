@@ -22,7 +22,7 @@ use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
 class ReportingController extends Controller
 {
-    public $level_global = 4;
+    public $level_global = 5;
     // public $from = '2023-01-01';
     // public $to = '2023-07-10';
 
