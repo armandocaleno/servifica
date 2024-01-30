@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Reporting;
 
 use App\Http\Controllers\Controller;
+use App\Http\Livewire\Reporting\Balance;
+use App\Http\Livewire\Reporting\Results;
 use App\Models\Account;
 use App\Models\Accounting;
 use App\Models\AccountingConfig;
@@ -23,8 +25,6 @@ use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 class ReportingController extends Controller
 {
     public $level_global = 5;
-    // public $from = '2023-01-01';
-    // public $to = '2023-07-10';
 
     public function balances()
     {
@@ -723,11 +723,13 @@ class ReportingController extends Controller
     function results_pdf(Request $request)
     {
         if ($request->type == 'pdf') {
-            $ingresos = $this->ingresos($request->from, $request->to);
-            $otros_ingresos = $this->otros_ingresos($request->from, $request->to);
-            $costos = $this->costos($request->from, $request->to);
-            $gastos = $this->gastos($request->from, $request->to);
-            $impuestos = $this->impuestos($request->from, $request->to);
+            $results = new Results();
+
+            $ingresos = $results->ingresos($request->from, $request->to);
+            $otros_ingresos = $results->otros_ingresos($request->from, $request->to);
+            $costos = $results->costos($request->from, $request->to);
+            $gastos = $results->gastos($request->from, $request->to);
+            $impuestos = $results->impuestos($request->from, $request->to);
 
             $desde = Carbon::parse($request->from)->format('d/m/Y');
             $hasta = Carbon::parse($request->to)->format('d/m/Y');
@@ -741,7 +743,8 @@ class ReportingController extends Controller
                 'impuestos' => $impuestos,
                 'desde' => $desde,
                 'hasta' => $hasta,
-                'company'   => $company
+                'company'   => $company,
+                'level' => $request->level
             ]);
 
             return $pdf->stream();
@@ -755,11 +758,13 @@ class ReportingController extends Controller
         $desde = Carbon::parse($request->from)->format('d/m/Y');
         $hasta = Carbon::parse($request->to)->format('d/m/Y');
         $company = session('company');
-        $ingresos = $this->ingresos($request->from, $request->to);
-        $otros_ingresos = $this->otros_ingresos($request->from, $request->to);
-        $costos = $this->costos($request->from, $request->to);
-        $gastos = $this->gastos($request->from, $request->to);
-        $impuestos = $this->impuestos($request->from, $request->to);
+        $results = new Results();
+
+        $ingresos = $results->ingresos($request->from, $request->to);
+        $otros_ingresos = $results->otros_ingresos($request->from, $request->to);
+        $costos = $results->costos($request->from, $request->to);
+        $gastos = $results->gastos($request->from, $request->to);
+        $impuestos = $results->impuestos($request->from, $request->to);
 
         //instancia el archivo de excel
         $spreadsheet = new Spreadsheet();
@@ -807,14 +812,23 @@ class ReportingController extends Controller
         $current_row = 6;
         $total_ingresos = 0;
         foreach ($ingresos as $key => $value) {
-            $total_ingresos += $value['total'];
-            $sheet->setCellValue('A' . $current_row, $value['codigo']);
 
-            $sheet->setCellValue('B' . $current_row, $value['cuenta']);
+            if ($value['nivel'] == 1) {
+                $total_ingresos = $value['total'];
+            }
 
-            $sheet->getStyle('C' . $current_row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
-            $sheet->setCellValue('C' . $current_row, $value['total']);
-            $current_row++;
+            if ($value['nivel'] <= $request->level) {
+                if ($value['grupo'] == 1) {
+                    $sheet->getStyle('A' . $current_row . ':' . 'C' . $current_row)->applyFromArray($styleArray);
+                }
+                $sheet->setCellValue('A' . $current_row, $value['codigo']);
+
+                $sheet->setCellValue('B' . $current_row, $value['cuenta']);
+
+                $sheet->getStyle('C' . $current_row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
+                $sheet->setCellValue('C' . $current_row, $value['total']);
+                $current_row++;
+            }
         }
 
         $sheet->getStyle('A' . $current_row)->applyFromArray($styleArray);
@@ -835,14 +849,23 @@ class ReportingController extends Controller
         $total_costos = 0;
 
         foreach ($costos as $value) {
-            $total_costos += $value['total'];
-            $sheet->setCellValue('A' . $current_row, $value['codigo']);
+            if ($value['nivel'] == 1) {
+                $total_costos = $value['total'];
+            }
 
-            $sheet->setCellValue('B' . $current_row, $value['cuenta']);
+            if ($value['nivel'] <= $request->level) {
+                if ($value['grupo'] == 1) {
+                    $sheet->getStyle('A' . $current_row . ':' . 'C' . $current_row)->applyFromArray($styleArray);
+                }
 
-            $sheet->getStyle('C' . $current_row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
-            $sheet->setCellValue('C' . $current_row, $value['total']);
-            $current_row++;
+                $sheet->setCellValue('A' . $current_row, $value['codigo']);
+
+                $sheet->setCellValue('B' . $current_row, $value['cuenta']);
+
+                $sheet->getStyle('C' . $current_row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
+                $sheet->setCellValue('C' . $current_row, $value['total']);
+                $current_row++;
+            }
         }
 
         $sheet->getStyle('A' . $current_row)->applyFromArray($styleArray);
@@ -873,14 +896,23 @@ class ReportingController extends Controller
         $total_gastos = 0;
 
         foreach ($gastos as $value) {
-            $total_gastos += $value['total'];
-            $sheet->setCellValue('A' . $current_row, $value['codigo']);
+            if ($value['nivel'] == 1) {
+                $total_gastos = $value['total'];
+            }
 
-            $sheet->setCellValue('B' . $current_row, $value['cuenta']);
+            if ($value['nivel'] <= $request->level) {
+                if ($value['grupo'] == 1) {
+                    $sheet->getStyle('A' . $current_row . ':' . 'C' . $current_row)->applyFromArray($styleArray);
+                }
 
-            $sheet->getStyle('C' . $current_row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
-            $sheet->setCellValue('C' . $current_row, $value['total']);
-            $current_row++;
+                $sheet->setCellValue('A' . $current_row, $value['codigo']);
+
+                $sheet->setCellValue('B' . $current_row, $value['cuenta']);
+
+                $sheet->getStyle('C' . $current_row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
+                $sheet->setCellValue('C' . $current_row, $value['total']);
+                $current_row++;
+            }
         }
 
         $sheet->getStyle('A' . $current_row)->applyFromArray($styleArray);
@@ -911,14 +943,23 @@ class ReportingController extends Controller
         $total_otros_ingresos = 0;
 
         foreach ($otros_ingresos as $value) {
-            $total_otros_ingresos += $value['total'];
-            $sheet->setCellValue('A' . $current_row, $value['codigo']);
+            if ($value['nivel'] == 1) {
+                $total_otros_ingresos = $value['total'];
+            }
 
-            $sheet->setCellValue('B' . $current_row, $value['cuenta']);
+            if ($value['nivel'] <= $request->level) {
+                if ($value['grupo'] == 1) {
+                    $sheet->getStyle('A' . $current_row . ':' . 'C' . $current_row)->applyFromArray($styleArray);
+                }
 
-            $sheet->getStyle('C' . $current_row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
-            $sheet->setCellValue('C' . $current_row, $value['total']);
-            $current_row++;
+                $sheet->setCellValue('A' . $current_row, $value['codigo']);
+
+                $sheet->setCellValue('B' . $current_row, $value['cuenta']);
+
+                $sheet->getStyle('C' . $current_row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
+                $sheet->setCellValue('C' . $current_row, $value['total']);
+                $current_row++;
+            }
         }
 
         $sheet->getStyle('A' . $current_row)->applyFromArray($styleArray);
@@ -949,14 +990,23 @@ class ReportingController extends Controller
         $total_impuestos = 0;
 
         foreach ($impuestos as $value) {
-            $total_impuestos += $value['total'];
-            $sheet->setCellValue('A' . $current_row, $value['codigo']);
+            if ($value['nivel'] == 1) {
+                $total_impuestos = $value['total'];
+            }
 
-            $sheet->setCellValue('B' . $current_row, $value['cuenta']);
+            if ($value['nivel'] <= $request->level) {
+                if ($value['grupo'] == 1) {
+                    $sheet->getStyle('A' . $current_row . ':' . 'C' . $current_row)->applyFromArray($styleArray);
+                }
 
-            $sheet->getStyle('C' . $current_row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
-            $sheet->setCellValue('C' . $current_row, $value['total']);
-            $current_row++;
+                $sheet->setCellValue('A' . $current_row, $value['codigo']);
+
+                $sheet->setCellValue('B' . $current_row, $value['cuenta']);
+
+                $sheet->getStyle('C' . $current_row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
+                $sheet->setCellValue('C' . $current_row, $value['total']);
+                $current_row++;
+            }
         }
 
         $sheet->getStyle('A' . $current_row)->applyFromArray($styleArray);
@@ -993,9 +1043,11 @@ class ReportingController extends Controller
     function general_balance_pdf(Request $request)
     {
         if ($request->type == 'pdf') {
-            $activo = $this->activo($request->from, $request->to);
-            $pasivo = $this->pasivo($request->from, $request->to);
-            $patrimonio = $this->patrimonio($request->from, $request->to);
+            $balance = new Balance();
+
+            $activo = $balance->activo($request->from, $request->to);
+            $pasivo = $balance->pasivo($request->from, $request->to);
+            $patrimonio = $balance->patrimonio($request->from, $request->to);
 
             $desde = Carbon::parse($request->from)->format('d/m/Y');
             $hasta = Carbon::parse($request->to)->format('d/m/Y');
@@ -1007,7 +1059,8 @@ class ReportingController extends Controller
                 'patrimonio' => $patrimonio,
                 'desde' => $desde,
                 'hasta' => $hasta,
-                'company'   => $company
+                'company'   => $company,
+                'level' => $request->level
             ]);
 
             return $pdf->stream();
@@ -1022,9 +1075,11 @@ class ReportingController extends Controller
         $hasta = Carbon::parse($request->to)->format('d/m/Y');
         $company = session('company');
 
-        $activo = $this->activo($request->from, $request->to);
-        $pasivo = $this->pasivo($request->from, $request->to);
-        $patrimonio = $this->patrimonio($request->from, $request->to);
+        $balance = new Balance();
+
+        $activo = $balance->activo($request->from, $request->to);
+        $pasivo = $balance->pasivo($request->from, $request->to);
+        $patrimonio = $balance->patrimonio($request->from, $request->to);
 
         //instancia el archivo de excel
         $spreadsheet = new Spreadsheet();
@@ -1076,14 +1131,20 @@ class ReportingController extends Controller
                 $total_activo += $value['total'];
             }
 
-            $sheet->setCellValue('A' . $current_row, $value['codigo']);
+            if ($value['nivel'] <= $request->level) {
+                if ($value['grupo'] == 1) {
+                    $sheet->getStyle('A' . $current_row . ':' . 'C' . $current_row)->applyFromArray($styleArray);
+                }
 
-            $sheet->setCellValue('B' . $current_row, $value['cuenta']);
+                $sheet->setCellValue('A' . $current_row, $value['codigo']);
 
-            $sheet->getStyle('C' . $current_row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
-            $sheet->setCellValue('C' . $current_row, $value['total']);
+                $sheet->setCellValue('B' . $current_row, $value['cuenta']);
 
-            $current_row++;
+                $sheet->getStyle('C' . $current_row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
+                $sheet->setCellValue('C' . $current_row, $value['total']);
+
+                $current_row++;
+            }
         }
 
         $sheet->getStyle('A' . $current_row)->applyFromArray($styleArray);
@@ -1100,21 +1161,27 @@ class ReportingController extends Controller
         $sheet->getStyle('A' . $current_row)->applyFromArray($styleArray);
         $sheet->setCellValue('A' . $current_row, 'PASIVO');
         $current_row++;
-     
+
         $total_pasivo = 0;
         foreach ($pasivo as $value) {
             if ($value['nivel'] == 1) {
                 $total_pasivo += $value['total'];
             }
 
-            $sheet->setCellValue('A' . $current_row, $value['codigo']);
+            if ($value['nivel'] <= $request->level) {
+                if ($value['grupo'] == 1) {
+                    $sheet->getStyle('A' . $current_row . ':' . 'C' . $current_row)->applyFromArray($styleArray);
+                }
 
-            $sheet->setCellValue('B' . $current_row, $value['cuenta']);
+                $sheet->setCellValue('A' . $current_row, $value['codigo']);
 
-            $sheet->getStyle('C' . $current_row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
-            $sheet->setCellValue('C' . $current_row, $value['total']);
+                $sheet->setCellValue('B' . $current_row, $value['cuenta']);
 
-            $current_row++;
+                $sheet->getStyle('C' . $current_row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
+                $sheet->setCellValue('C' . $current_row, $value['total']);
+
+                $current_row++;
+            }
         }
 
         $sheet->getStyle('A' . $current_row)->applyFromArray($styleArray);
@@ -1127,43 +1194,49 @@ class ReportingController extends Controller
         $current_row++;
         $current_row++;
 
-         // PATRIMONIO
-         $sheet->getStyle('A' . $current_row)->applyFromArray($styleArray);
-         $sheet->setCellValue('A' . $current_row, 'PASIVO');
-         $current_row++;
-      
-         $total_patrimonio = 0;
-         foreach ($patrimonio as $value) {
-             if ($value['nivel'] == 1) {
-                 $total_patrimonio += $value['total'];
-             }
- 
-             $sheet->setCellValue('A' . $current_row, $value['codigo']);
- 
-             $sheet->setCellValue('B' . $current_row, $value['cuenta']);
- 
-             $sheet->getStyle('C' . $current_row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
-             $sheet->setCellValue('C' . $current_row, $value['total']);
- 
-             $current_row++;
-         }
- 
-         $sheet->getStyle('A' . $current_row)->applyFromArray($styleArray);
-         $sheet->setCellValue('A' . $current_row, "TOTAL PATRIMONIO");
- 
-         $sheet->getStyle('C' . $current_row)->applyFromArray($styleArray);
-         $sheet->getStyle('C' . $current_row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
-         $sheet->setCellValue('C' . $current_row, $total_patrimonio);
- 
-         $current_row++;
-         $current_row++;
+        // PATRIMONIO
+        $sheet->getStyle('A' . $current_row)->applyFromArray($styleArray);
+        $sheet->setCellValue('A' . $current_row, 'PASIVO');
+        $current_row++;
 
-         $sheet->getStyle('A' . $current_row)->applyFromArray($styleArray);
-         $sheet->setCellValue('A' . $current_row, "PASIVO + PATRIMONIO");
- 
-         $sheet->getStyle('C' . $current_row)->applyFromArray($styleArray);
-         $sheet->getStyle('C' . $current_row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
-         $sheet->setCellValue('C' . $current_row, $total_pasivo + $total_patrimonio);
+        $total_patrimonio = 0;
+        foreach ($patrimonio as $value) {
+            if ($value['nivel'] == 1) {
+                $total_patrimonio += $value['total'];
+            }
+
+            if ($value['nivel'] <= $request->level) {
+                if ($value['grupo'] == 1) {
+                    $sheet->getStyle('A' . $current_row . ':' . 'C' . $current_row)->applyFromArray($styleArray);
+                }
+
+                $sheet->setCellValue('A' . $current_row, $value['codigo']);
+
+                $sheet->setCellValue('B' . $current_row, $value['cuenta']);
+
+                $sheet->getStyle('C' . $current_row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
+                $sheet->setCellValue('C' . $current_row, $value['total']);
+
+                $current_row++;
+            }
+        }
+
+        $sheet->getStyle('A' . $current_row)->applyFromArray($styleArray);
+        $sheet->setCellValue('A' . $current_row, "TOTAL PATRIMONIO");
+
+        $sheet->getStyle('C' . $current_row)->applyFromArray($styleArray);
+        $sheet->getStyle('C' . $current_row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
+        $sheet->setCellValue('C' . $current_row, $total_patrimonio);
+
+        $current_row++;
+        $current_row++;
+
+        $sheet->getStyle('A' . $current_row)->applyFromArray($styleArray);
+        $sheet->setCellValue('A' . $current_row, "PASIVO + PATRIMONIO");
+
+        $sheet->getStyle('C' . $current_row)->applyFromArray($styleArray);
+        $sheet->getStyle('C' . $current_row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
+        $sheet->setCellValue('C' . $current_row, $total_pasivo + $total_patrimonio);
 
         //nombre del archivo excel
         $file = "estado_situacion_inicial_" . date('dmYHi') . ".xlsx";
@@ -1178,48 +1251,49 @@ class ReportingController extends Controller
         $writer->save('php://output'); //descarga el archivo
     }
 
-    function ledger_pdf(Request $request) 
+    function ledger_pdf(Request $request)
     {
         if ($request->type == 'pdf') {
             if ($request->accounting_id == null || $request->accounting_id == "") {
                 $this->info('Debe seleccionar una cuenta contable.');
                 return;
             }
-            
+
             $accounting = Accounting::find($request->accounting_id);
 
             // $account_type = Accounting::find($request->accounting_id)->type;
-            
+
             $journals = JournalDetail::join('journals', 'journals.id', 'journal_details.journal_id')
-                                    ->select('journals.date', 'journals.refence as reference', 'journal_details.debit_value', 'journal_details.credit_value')
-                                    ->where('journals.company_id', session('company')->id)
-                                    ->where('journals.state', '1')
-                                    ->whereBetween('journals.date', [$request->from, $request->to])
-                                    ->where('journal_details.accounting_id', $request->accounting_id)
-                                    ->orderBy('journals.date')
-                                    ->get();
-            
+                ->select('journals.date', 'journals.refence as reference', 'journal_details.debit_value', 'journal_details.credit_value')
+                ->where('journals.company_id', session('company')->id)
+                ->where('journals.state', '1')
+                ->whereBetween('journals.date', [$request->from, $request->to])
+                ->where('journal_details.accounting_id', $request->accounting_id)
+                ->orderBy('journals.date')
+                ->get();
+
             if (count($journals) != 0) {
                 $desde = Carbon::parse($request->from)->format('d/m/Y');
                 $hasta = Carbon::parse($request->to)->format('d/m/Y');
                 $company = session('company');
 
                 $pdf = PDF::loadView('reporting.ledger-pdf', [
-                   'journals' => $journals,
-                   'accounting' => $accounting,
+                    'journals' => $journals,
+                    'accounting' => $accounting,
                     'desde' => $desde,
                     'hasta' => $hasta,
                     'company'   => $company
                 ]);
-    
+
                 return $pdf->stream();
             }
-        }else {
+        } else {
             $this->ledger_excel($request);
-        } 
+        }
     }
 
-    function ledger_excel(Request $request) {
+    function ledger_excel(Request $request)
+    {
         $desde = Carbon::parse($request->from)->format('d/m/Y');
         $hasta = Carbon::parse($request->to)->format('d/m/Y');
         $company = session('company');
@@ -1269,26 +1343,26 @@ class ReportingController extends Controller
         $sheet->setCellValue('B5', $accounting->code . ' ' . $accounting->name);
 
 
-         //Celdas de título
-         $sheet->setCellValue('A6', 'FECHA');
-         $sheet->setCellValue('B6', 'CONCEPTO');
-         $sheet->setCellValue('C6', 'DEBE');
-         $sheet->setCellValue('D6', 'HABER');
-         $sheet->setCellValue('E6', 'SALDO');
-         $sheet->getStyle("A6")->applyFromArray($styleArray);
-         $sheet->getStyle("B6")->applyFromArray($styleArray);
-         $sheet->getStyle("C6")->applyFromArray($styleArray);
-         $sheet->getStyle("D6")->applyFromArray($styleArray);
-         $sheet->getStyle("E6")->applyFromArray($styleArray);
+        //Celdas de título
+        $sheet->setCellValue('A6', 'FECHA');
+        $sheet->setCellValue('B6', 'CONCEPTO');
+        $sheet->setCellValue('C6', 'DEBE');
+        $sheet->setCellValue('D6', 'HABER');
+        $sheet->setCellValue('E6', 'SALDO');
+        $sheet->getStyle("A6")->applyFromArray($styleArray);
+        $sheet->getStyle("B6")->applyFromArray($styleArray);
+        $sheet->getStyle("C6")->applyFromArray($styleArray);
+        $sheet->getStyle("D6")->applyFromArray($styleArray);
+        $sheet->getStyle("E6")->applyFromArray($styleArray);
 
-         $journals = JournalDetail::join('journals', 'journals.id', 'journal_details.journal_id')
-                                    ->select('journals.date', 'journals.refence as reference', 'journal_details.debit_value', 'journal_details.credit_value')
-                                    ->where('journals.company_id', session('company')->id)
-                                    ->where('journals.state', '1')
-                                    ->whereBetween('journals.date', [$request->from, $request->to])
-                                    ->where('journal_details.accounting_id', $request->accounting_id)
-                                    ->orderBy('journals.date')
-                                    ->get();
+        $journals = JournalDetail::join('journals', 'journals.id', 'journal_details.journal_id')
+            ->select('journals.date', 'journals.refence as reference', 'journal_details.debit_value', 'journal_details.credit_value')
+            ->where('journals.company_id', session('company')->id)
+            ->where('journals.state', '1')
+            ->whereBetween('journals.date', [$request->from, $request->to])
+            ->where('journal_details.accounting_id', $request->accounting_id)
+            ->orderBy('journals.date')
+            ->get();
 
         $current_row = 7;
         $total_debe = 0;
@@ -1306,767 +1380,30 @@ class ReportingController extends Controller
             $current_row++;
         }
 
-        
+
         $sheet->getStyle('C' . $current_row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
         $sheet->getStyle('D' . $current_row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
         $sheet->getStyle('E' . $current_row)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_ACCOUNTING_USD);
 
-        $sheet->getStyle('A'. $current_row)->applyFromArray($styleArray);
-         $sheet->getStyle('C'. $current_row)->applyFromArray($styleArray);
-         $sheet->getStyle('D'. $current_row)->applyFromArray($styleArray);
-         $sheet->getStyle('E'. $current_row)->applyFromArray($styleArray);
+        $sheet->getStyle('A' . $current_row)->applyFromArray($styleArray);
+        $sheet->getStyle('C' . $current_row)->applyFromArray($styleArray);
+        $sheet->getStyle('D' . $current_row)->applyFromArray($styleArray);
+        $sheet->getStyle('E' . $current_row)->applyFromArray($styleArray);
 
-        $sheet->setCellValue('A'. $current_row, 'TOTALES');
-        $sheet->setCellValue('C'. $current_row, $total_debe);
-        $sheet->setCellValue('D'. $current_row, $total_haber);
-        $sheet->setCellValue('E'. $current_row, $total_debe - $total_haber);
-         //nombre del archivo excel
+        $sheet->setCellValue('A' . $current_row, 'TOTALES');
+        $sheet->setCellValue('C' . $current_row, $total_debe);
+        $sheet->setCellValue('D' . $current_row, $total_haber);
+        $sheet->setCellValue('E' . $current_row, $total_debe - $total_haber);
+        //nombre del archivo excel
         $file = "libro_mayor_" . date('dmYHi') . ".xlsx";
 
-         //cabeceras para archivos xlsx
+        //cabeceras para archivos xlsx
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $file . '"');
         header('Cache-Control: max-age=0');
- 
+
         //escribe el contenido en el archivo xlsx
         $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
         $writer->save('php://output'); //descarga el archivo
-    }
-
-    // CALCULA EL INGRESO
-    function ingreso($from, $to)
-    {
-        $accountings = DB::table('journal_details')
-            ->join('accountings', 'journal_details.accounting_id', '=', 'accountings.id')
-            ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
-            ->selectRaw('accountings.id, accountings.parent_id, accountings.level, accountings.code, accountings.name, accountings.account_class_id, accountings.account_type_id, sum(debit_value) as total_debe, sum(credit_value) as total_haber')
-            ->groupBy('accountings.id', 'accountings.parent_id', 'accountings.level', 'accountings.code', 'accountings.name', 'accountings.account_class_id', 'accountings.account_type_id')
-            ->where('accountings.company_id', '=', session('company')->id)
-            ->where('journals.state', '=', 1)
-            ->whereBetween('journals.date', [$from, $to])
-            ->whereIn('accountings.account_class_id', ['4', '5'])
-            ->get();
-
-        $total_ingreso = 0;
-
-        // AGREGA LAS CUENTAS DE DETALLE
-        foreach ($accountings as $value) {
-            // OPERACION DEPENDIENDO LA NATURALEZA DE LA CUENTA (DEUDORA O ACREEDORA)
-            if ($value->account_type_id == 1) {
-                $total = floatval($value->total_debe) - floatval($value->total_haber);
-            } else {
-                $total = floatval($value->total_haber) - floatval($value->total_debe);
-            }
-
-            $total_ingreso += $total;
-        }
-
-        return $total_ingreso;
-    }
-
-    // CALCULA EL GASTO
-    function gasto($from, $to)
-    {
-        $accountings = DB::table('journal_details')
-            ->join('accountings', 'journal_details.accounting_id', '=', 'accountings.id')
-            ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
-            ->selectRaw('accountings.id, accountings.parent_id, accountings.level, accountings.code, accountings.name, accountings.account_class_id, accountings.account_type_id, sum(debit_value) as total_debe, sum(credit_value) as total_haber')
-            ->groupBy('accountings.id', 'accountings.parent_id', 'accountings.level', 'accountings.code', 'accountings.name', 'accountings.account_class_id', 'accountings.account_type_id')
-            ->where('accountings.company_id', '=', session('company')->id)
-            ->where('journals.state', '=', 1)
-            ->whereBetween('journals.date', [$from, $to])
-            ->whereIn('accountings.account_class_id', ['6', '7'])
-            ->get();
-
-        $total_gasto = 0;
-
-        // AGREGA LAS CUENTAS DE DETALLE
-        foreach ($accountings as $value) {
-            // OPERACION DEPENDIENDO LA NATURALEZA DE LA CUENTA (DEUDORA O ACREEDORA)
-            if ($value->account_type_id == 1) {
-                $total = floatval($value->total_debe) - floatval($value->total_haber);
-            } else {
-                $total = floatval($value->total_haber) - floatval($value->total_debe);
-            }
-
-            $total_gasto += $total;
-        }
-
-        return $total_gasto;
-    }
-
-    // CALCULA EL ACTIVO
-    function activo($from, $to)
-    {
-
-        $cuentas_activo = Accounting::where('account_class_id', '1')
-            ->where('group', '1')->get();
-
-        $accountings = DB::table('journal_details')
-            ->join('accountings', 'journal_details.accounting_id', '=', 'accountings.id')
-            ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
-            ->selectRaw('accountings.id, accountings.parent_id, accountings.level, accountings.code, accountings.name, accountings.account_class_id, accountings.account_type_id, sum(debit_value) as total_debe, sum(credit_value) as total_haber')
-            ->groupBy('accountings.id', 'accountings.parent_id', 'accountings.level', 'accountings.code', 'accountings.name', 'accountings.account_class_id', 'accountings.account_type_id')
-            ->where('accountings.company_id', '=', session('company')->id)
-            ->where('journals.state', '=', 1)
-            ->whereBetween('journals.date', [$from, $to])
-            ->where('accountings.account_class_id', '=', '1')
-            ->get();
-
-        $acc = [];
-        $act = [];
-        $activo = [];
-        $acc['total'] = 0;
-
-        // AGREGA LAS CUENTAS DE DETALLE
-        foreach ($accountings as $value) {
-            $acc['id'] = $value->id;
-            $acc['codigo'] = $value->code;
-            $acc['cuenta'] = $value->name;
-            $acc['padre'] = $value->parent_id;
-            $acc['nivel'] = $value->level;
-
-            // OPERACION DEPENDIENDO LA NATURALEZA DE LA CUENTA (DEUDORA O ACREEDORA)
-            if ($value->account_type_id == 1) {
-                $acc['total'] = floatval($value->total_debe) - floatval($value->total_haber);
-            } else {
-                $acc['total'] = floatval($value->total_haber) - floatval($value->total_debe);
-            }
-
-            if ($acc['total'] != 0) {
-                $act[] = $acc;
-                $activo[] = $acc;
-            }
-        }
-
-        // CALCULA LOS TOTALES DE LAS CUENTAS DE GRUPO
-        for ($i = $this->level_global - 1; $i >= 1; $i--) {
-            foreach ($cuentas_activo as $value) {
-                if ($value->level == $i) {
-                    $acc['id'] = $value->id;
-                    $acc['codigo'] = $value->code;
-                    $acc['cuenta'] = $value->name;
-                    $acc['padre'] = $value->parent_id;
-                    $acc['nivel'] = $value->level;
-                    $acc['total'] = 0;
-
-                    foreach ($act as $v) {
-                        if ($v['padre'] == $value->id) {
-                            $acc['total'] += $v['total'];
-                        }
-                    }
-
-                    if ($acc['total'] != 0) {
-                        $act[] = $acc;
-                        $activo[] = $acc;
-                    }
-                }
-            }
-        }
-        $activo = $this->sort($activo);
-        return $activo;
-    }
-
-    // OBTIENE LA UTILIDAD DEL EJERCICIO
-    function utilidad($from, $to)
-    {
-        $ingreso = $this->ingreso($from, $to);
-        $gasto = $this->gasto($from, $to);
-        $utilidad = $ingreso - $gasto;
-
-        return $utilidad;
-    }
-
-    //CALCULA EL PASIVO
-    function pasivo($from, $to)
-    {
-
-        $cuentas_pasivo = Accounting::where('account_class_id', '2')
-            ->where('group', '1')->get();
-
-        $accountings = DB::table('journal_details')
-            ->join('accountings', 'journal_details.accounting_id', '=', 'accountings.id')
-            ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
-            ->selectRaw('accountings.id, accountings.parent_id, accountings.level, accountings.code, accountings.name, accountings.account_class_id, accountings.account_type_id, sum(debit_value) as total_debe, sum(credit_value) as total_haber')
-            ->groupBy('accountings.id', 'accountings.parent_id', 'accountings.level', 'accountings.code', 'accountings.name', 'accountings.account_class_id', 'accountings.account_type_id')
-            ->where('accountings.company_id', '=', session('company')->id)
-            ->where('journals.state', '=', 1)
-            ->whereBetween('journals.date', [$from, $to])
-            ->where('accountings.account_class_id', '=', '2')
-            ->get();
-
-        $acc = [];
-        $pasivo = [];
-        $acc['total'] = 0;
-
-        // AGREGA LAS CUENTAS DE DETALLE
-        foreach ($accountings as $value) {
-            $acc['id'] = $value->id;
-            $acc['codigo'] = $value->code;
-            $acc['cuenta'] = $value->name;
-            $acc['padre'] = $value->parent_id;
-            $acc['nivel'] = $value->level;
-
-            // OPERACION DEPENDIENDO LA NATURALEZA DE LA CUENTA (DEUDORA O ACREEDORA)
-            if ($value->account_type_id == 1) {
-                $acc['total'] = floatval($value->total_debe) - floatval($value->total_haber);
-            } else {
-                $acc['total'] = floatval($value->total_haber) - floatval($value->total_debe);
-            }
-
-            if ($acc['total'] != 0) {
-                $pasivo[] = $acc;
-            }
-        }
-
-        // CALCULA LOS TOTALES DE LAS CUENTAS DE GRUPO
-        for ($i = $this->level_global - 1; $i >= 1; $i--) {
-            foreach ($cuentas_pasivo as $value) {
-                if ($value->level == $i) {
-                    $acc['id'] = $value->id;
-                    $acc['codigo'] = $value->code;
-                    $acc['cuenta'] = $value->name;
-                    $acc['padre'] = $value->parent_id;
-                    $acc['nivel'] = $value->level;
-                    $acc['total'] = 0;
-
-                    foreach ($pasivo as $v) {
-                        if ($v['padre'] == $value->id) {
-                            $acc['total'] += $v['total'];
-                        }
-                    }
-
-                    if ($acc['total'] != 0) {
-                        $pasivo[] = $acc;
-                    }
-                }
-            }
-        }
-        $pasivo = $this->sort($pasivo);
-        return $pasivo;
-    }
-
-    // CALCULA EL PATRIMONIO
-    function patrimonio($from, $to)
-    {
-
-        $cuentas_patrimonio = Accounting::where('account_class_id', '3')
-            ->where('group', '1')->get();
-
-        $accountings = DB::table('journal_details')
-            ->join('accountings', 'journal_details.accounting_id', '=', 'accountings.id')
-            ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
-            ->selectRaw('accountings.id, accountings.parent_id, accountings.level, accountings.code, accountings.name, accountings.account_class_id, accountings.account_type_id, sum(debit_value) as total_debe, sum(credit_value) as total_haber')
-            ->groupBy('accountings.id', 'accountings.parent_id', 'accountings.level', 'accountings.code', 'accountings.name', 'accountings.account_class_id', 'accountings.account_type_id')
-            ->where('accountings.company_id', '=', session('company')->id)
-            ->where('journals.state', '=', 1)
-            ->whereBetween('journals.date', [$from, $to])
-            ->where('accountings.account_class_id', '=', '3')
-            ->get();
-
-        $acc = [];
-        $patrimonio = [];
-        $acc['total'] = 0;
-
-        // AGREGA LAS CUENTAS DE DETALLE
-        foreach ($accountings as $value) {
-            $acc['id'] = $value->id;
-            $acc['codigo'] = $value->code;
-            $acc['cuenta'] = $value->name;
-            $acc['padre'] = $value->parent_id;
-            $acc['nivel'] = $value->level;
-
-            // OPERACION DEPENDIENDO LA NATURALEZA DE LA CUENTA (DEUDORA O ACREEDORA)
-            if ($value->account_type_id == 1) {
-                $acc['total'] = floatval($value->total_debe) - floatval($value->total_haber);
-            } else {
-                $acc['total'] = floatval($value->total_haber) - floatval($value->total_debe);
-            }
-
-            if ($acc['total'] != 0) {
-                $patrimonio[] = $acc;
-            }
-        }
-
-        // REGISTRA LA UTILIDAD DEL EJERCICIO
-        $id_cuenta_resultado = AccountingConfig::where('name', 'resultado')->first();
-        $cuenta_resultado = Accounting::find($id_cuenta_resultado->accounting_id);
-
-        $acc['id'] = $cuenta_resultado->id;
-        $acc['codigo'] = $cuenta_resultado->code;
-        $acc['cuenta'] = $cuenta_resultado->name;
-        $acc['padre'] = $cuenta_resultado->parent_id;
-        $acc['nivel'] = $cuenta_resultado->level;
-        $acc['total'] = $this->utilidad($from, $to);
-        $patrimonio[] = $acc;
-
-        // CALCULA LOS TOTALES DE LAS CUENTAS DE GRUPO
-        for ($i = $this->level_global - 1; $i >= 1; $i--) {
-            foreach ($cuentas_patrimonio as $value) {
-                if ($value->level == $i) {
-                    $acc['id'] = $value->id;
-                    $acc['codigo'] = $value->code;
-                    $acc['cuenta'] = $value->name;
-                    $acc['padre'] = $value->parent_id;
-                    $acc['nivel'] = $value->level;
-                    $acc['total'] = 0;
-
-                    foreach ($patrimonio as $v) {
-                        if ($v['padre'] == $value->id) {
-                            $acc['total'] += $v['total'];
-                        }
-                    }
-
-                    if ($acc['total'] != 0) {
-                        $patrimonio[] = $acc;
-                    }
-                }
-            }
-        }
-        $patrimonio = $this->sort($patrimonio);
-        return $patrimonio;
-    }
-
-    // CALCULA LOS INGRESOS
-    function ingresos($from, $to)
-    {
-
-        $cuentas_ingresos = Accounting::where('account_class_id', '4')
-            ->where('group', '1')->get();
-
-        $accountings = DB::table('journal_details')
-            ->join('accountings', 'journal_details.accounting_id', '=', 'accountings.id')
-            ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
-            ->selectRaw('accountings.id, accountings.parent_id, accountings.level, accountings.code, accountings.name, accountings.account_class_id, accountings.account_type_id, sum(debit_value) as total_debe, sum(credit_value) as total_haber')
-            ->groupBy('accountings.id', 'accountings.parent_id', 'accountings.level', 'accountings.code', 'accountings.name', 'accountings.account_class_id', 'accountings.account_type_id')
-            ->where('accountings.company_id', '=', session('company')->id)
-            ->where('journals.state', '=', 1)
-            ->whereBetween('journals.date', [$from, $to])
-            ->where('accountings.account_class_id', '=', '4')
-            ->get();
-
-        $acc = [];
-        $ingresos = [];
-        $acc['total'] = 0;
-
-        // AGREGA LAS CUENTAS DE DETALLE
-        foreach ($accountings as $value) {
-            $acc['id'] = $value->id;
-            $acc['codigo'] = $value->code;
-            $acc['cuenta'] = $value->name;
-            $acc['padre'] = $value->parent_id;
-            $acc['nivel'] = $value->level;
-
-            // OPERACION DEPENDIENDO LA NATURALEZA DE LA CUENTA (DEUDORA O ACREEDORA)
-            if ($value->account_type_id == 1) {
-                $acc['total'] = floatval($value->total_debe) - floatval($value->total_haber);
-            } else {
-                $acc['total'] = floatval($value->total_haber) - floatval($value->total_debe);
-            }
-
-            if ($acc['total'] != 0) {
-                $ingresos[] = $acc;
-            }
-        }
-
-        // CALCULA LOS TOTALES DE LAS CUENTAS DE GRUPO
-        // for ($i = $this->level_global - 1; $i >= 1; $i--) { 
-        //     foreach ($cuentas_ingresos as $value) {
-        //         if ($value->level == $i)  {
-        //             $acc['id'] = $value->id;
-        //             $acc['codigo'] = $value->code;
-        //             $acc['cuenta'] = $value->name;
-        //             $acc['padre'] = $value->parent_id;
-        //             $acc['nivel'] = $value->level;
-        //             $acc['total'] = 0;
-
-        //             foreach ($ingresos as $v) {
-        //                 if ($v['padre'] == $value->id) {
-        //                     $acc['total'] += $v['total'];
-        //                 }
-        //             }
-
-        //             if ($acc['total'] != 0) {
-        //                 $ingresos[] = $acc;
-        //             }
-
-        //         }
-        //     }
-        // }
-
-        // $ingresos = $this->sort($ingresos);
-        return $ingresos;
-    }
-
-    // CALCULA OTROS INGRESOS
-    function otros_ingresos($from, $to)
-    {
-
-        $cuentas_otros_ingresos = Accounting::where('account_class_id', '5')
-            ->where('group', '1')->get();
-
-        $accountings = DB::table('journal_details')
-            ->join('accountings', 'journal_details.accounting_id', '=', 'accountings.id')
-            ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
-            ->selectRaw('accountings.id, accountings.parent_id, accountings.level, accountings.code, accountings.name, accountings.account_class_id, accountings.account_type_id, sum(debit_value) as total_debe, sum(credit_value) as total_haber')
-            ->groupBy('accountings.id', 'accountings.parent_id', 'accountings.level', 'accountings.code', 'accountings.name', 'accountings.account_class_id', 'accountings.account_type_id')
-            ->where('accountings.company_id', '=', session('company')->id)
-            ->where('journals.state', '=', 1)
-            ->whereBetween('journals.date', [$from, $to])
-            ->where('accountings.account_class_id', '=', '5')
-            ->get();
-
-        $acc = [];
-        $ingresos = [];
-        $acc['total'] = 0;
-
-        // AGREGA LAS CUENTAS DE DETALLE
-        foreach ($accountings as $value) {
-            $acc['id'] = $value->id;
-            $acc['codigo'] = $value->code;
-            $acc['cuenta'] = $value->name;
-            $acc['padre'] = $value->parent_id;
-            $acc['nivel'] = $value->level;
-
-            // OPERACION DEPENDIENDO LA NATURALEZA DE LA CUENTA (DEUDORA O ACREEDORA)
-            if ($value->account_type_id == 1) {
-                $acc['total'] = floatval($value->total_debe) - floatval($value->total_haber);
-            } else {
-                $acc['total'] = floatval($value->total_haber) - floatval($value->total_debe);
-            }
-
-            if ($acc['total'] != 0) {
-                $ingresos[] = $acc;
-            }
-        }
-
-
-        // CALCULA LOS TOTALES DE LAS CUENTAS DE GRUPO
-        // for ($i = $this->level_global - 1; $i >= 1; $i--) { 
-        //     foreach ($cuentas_otros_ingresos as $value) {
-        //         if ($value->level == $i)  {
-        //             $acc['id'] = $value->id;
-        //             $acc['codigo'] = $value->code;
-        //             $acc['cuenta'] = $value->name;
-        //             $acc['padre'] = $value->parent_id;
-        //             $acc['nivel'] = $value->level;
-        //             $acc['total'] = 0;
-
-        //             foreach ($ingresos as $v) {
-        //                 if ($v['padre'] == $value->id) {
-        //                     $acc['total'] += $v['total'];
-        //                 }
-        //             }
-
-        //             if ($acc['total'] != 0) {
-        //                 $ingresos[] = $acc;
-        //             }
-
-        //         }
-        //     }
-        // }
-        // $ingresos = $this->sort($ingresos);
-        return $ingresos;
-    }
-
-    // CALCULA LOS COSTOS DE VENTA
-    function costos($from, $to)
-    {
-
-        $cuentas_costo_ventas = Accounting::where('account_class_id', '6')
-            ->where('group', '1')->get();
-
-        $accountings = DB::table('journal_details')
-            ->join('accountings', 'journal_details.accounting_id', '=', 'accountings.id')
-            ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
-            ->selectRaw('accountings.id, accountings.parent_id, accountings.level, accountings.code, accountings.name, accountings.account_class_id, accountings.account_type_id, sum(debit_value) as total_debe, sum(credit_value) as total_haber')
-            ->groupBy('accountings.id', 'accountings.parent_id', 'accountings.level', 'accountings.code', 'accountings.name', 'accountings.account_class_id', 'accountings.account_type_id')
-            ->where('accountings.company_id', '=', session('company')->id)
-            ->whereBetween('journals.date', [$from, $to])
-            ->where('accountings.account_class_id', '=', '6')
-            ->get();
-
-        $acc = [];
-        $costos = [];
-        $acc['total'] = 0;
-
-        // AGREGA LAS CUENTAS DE DETALLE
-        foreach ($accountings as $value) {
-            $acc['id'] = $value->id;
-            $acc['codigo'] = $value->code;
-            $acc['cuenta'] = $value->name;
-            $acc['padre'] = $value->parent_id;
-            $acc['nivel'] = $value->level;
-
-            // OPERACION DEPENDIENDO LA NATURALEZA DE LA CUENTA (DEUDORA O ACREEDORA)
-            if ($value->account_type_id == 1) {
-                $acc['total'] = floatval($value->total_debe) - floatval($value->total_haber);
-            } else {
-                $acc['total'] = floatval($value->total_haber) - floatval($value->total_debe);
-            }
-
-            if ($acc['total'] != 0) {
-                $costos[] = $acc;
-            }
-        }
-
-
-        // CALCULA LOS TOTALES DE LAS CUENTAS DE GRUPO
-        // for ($i = $this->level_global - 1; $i >= 1; $i--) { 
-        //     foreach ($cuentas_costo_ventas as $value) {
-        //         if ($value->level == $i)  {
-        //             $acc['id'] = $value->id;
-        //             $acc['codigo'] = $value->code;
-        //             $acc['cuenta'] = $value->name;
-        //             $acc['padre'] = $value->parent_id;
-        //             $acc['nivel'] = $value->level;
-        //             $acc['total'] = 0;
-
-        //             foreach ($costos as $v) {
-        //                 if ($v['padre'] == $value->id) {
-        //                     $acc['total'] += $v['total'];
-        //                 }
-        //             }
-
-        //             if ($acc['total'] != 0) {
-        //                 $costos[] = $acc;
-        //             }
-
-        //         }
-        //     }
-        // }
-        // $costos = $this->sort($costos);
-        return $costos;
-    }
-
-    // CALCULA LOS GASTOS
-    function gastos($from, $to)
-    {
-
-        $cuentas_gastos = Accounting::where('account_class_id', '7')
-            ->where('group', '1')->get();
-
-        $accountings = DB::table('journal_details')
-            ->join('accountings', 'journal_details.accounting_id', '=', 'accountings.id')
-            ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
-            ->selectRaw('accountings.id, accountings.parent_id, accountings.level, accountings.code, accountings.name, accountings.account_class_id, accountings.account_subclass_id, accountings.account_type_id, sum(debit_value) as total_debe, sum(credit_value) as total_haber')
-            ->groupBy('accountings.id', 'accountings.parent_id', 'accountings.level', 'accountings.code', 'accountings.name', 'accountings.account_class_id', 'accountings.account_subclass_id', 'accountings.account_type_id')
-            ->where('accountings.company_id', '=', session('company')->id)
-            ->whereBetween('journals.date', [$from, $to])
-            ->where('accountings.account_class_id', '=', '7')
-            ->where('accountings.account_subclass_id', '=', null)
-            ->get();
-
-        $acc = [];
-        $gastos = [];
-        $acc['total'] = 0;
-        // dd($accountings);
-        // AGREGA LAS CUENTAS DE DETALLE
-        foreach ($accountings as $value) {
-            $acc['id'] = $value->id;
-            $acc['codigo'] = $value->code;
-            $acc['cuenta'] = $value->name;
-            $acc['padre'] = $value->parent_id;
-            $acc['nivel'] = $value->level;
-
-            // OPERACION DEPENDIENDO LA NATURALEZA DE LA CUENTA (DEUDORA O ACREEDORA)
-            if ($value->account_type_id == 1) {
-                $acc['total'] = floatval($value->total_debe) - floatval($value->total_haber);
-            } else {
-                $acc['total'] = floatval($value->total_haber) - floatval($value->total_debe);
-            }
-
-            if ($acc['total'] != 0) {
-                $gastos[] = $acc;
-            }
-        }
-
-
-        // CALCULA LOS TOTALES DE LAS CUENTAS DE GRUPO
-        // for ($i = $this->level_global - 1; $i >= 1; $i--) { 
-        //     foreach ($cuentas_gastos as $value) {
-        //         if ($value->level == $i)  {
-        //             $acc['id'] = $value->id;
-        //             $acc['codigo'] = $value->code;
-        //             $acc['cuenta'] = $value->name;
-        //             $acc['padre'] = $value->parent_id;
-        //             $acc['nivel'] = $value->level;
-        //             $acc['total'] = 0;
-
-        //             foreach ($gastos as $v) {
-        //                 if ($v['padre'] == $value->id) {
-        //                     $acc['total'] += $v['total'];
-        //                 }
-        //             }
-
-        //             if ($acc['total'] != 0) {
-        //                 $gastos[] = $acc;
-        //             }
-
-        //         }
-        //     }
-        // }
-
-        // $gastos = $this->sort($gastos);
-        return $gastos;
-    }
-
-    // CALCULA LOS IMPUESTOS
-    function impuestos($from, $to)
-    {
-
-        $cuentas_impuestos = Accounting::where('account_class_id', '7')
-            ->where('group', '1')->get();
-
-        // $accountings = DB::table('journal_details')
-        //             ->join('accountings', 'journal_details.accounting_id', '=', 'accountings.id')
-        //             ->join('account_classes', 'account_classes.id', '=', 'accountings.account_class_id')
-        //             ->join('account_subclasses', 'account_classes.id', '=', 'account_subclasses.account_class_id')
-        //             ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
-        //             ->selectRaw('accountings.id, accountings.parent_id, accountings.level, accountings.code, accountings.name, accountings.account_class_id, accountings.account_type_id, account_subclasses.id, sum(debit_value) as total_debe, sum(credit_value) as total_haber')
-        //             ->groupBy('accountings.id', 'accountings.parent_id', 'accountings.level','accountings.code', 'accountings.name', 'accountings.account_class_id', 'accountings.account_type_id', 'account_subclasses.id')
-        //             ->where('accountings.company_id', '=', session('company')->id)
-        //             ->whereBetween('journals.date', [$from, $to])
-        //             // ->where('accountings.account_class_id', '=', '7')
-        //             ->where('account_subclasses.id', '=', '4')
-        //             ->get();
-        $accountings = DB::table('journal_details')
-            ->join('accountings', 'journal_details.accounting_id', '=', 'accountings.id')
-            ->join('journals', 'journal_details.journal_id', '=', 'journals.id')
-            ->selectRaw('accountings.id, accountings.parent_id, accountings.level, accountings.code, accountings.name, accountings.account_class_id, accountings.account_type_id, accountings.account_subclass_id, sum(debit_value) as total_debe, sum(credit_value) as total_haber')
-            ->groupBy('accountings.id', 'accountings.parent_id', 'accountings.level', 'accountings.code', 'accountings.name', 'accountings.account_class_id', 'accountings.account_type_id', 'accountings.account_subclass_id')
-            ->where('accountings.company_id', '=', session('company')->id)
-            ->whereBetween('journals.date', [$from, $to])
-            ->where('accountings.account_subclass_id', '=', '4')
-            ->get();
-
-        $acc = [];
-        $impuestos = [];
-        $acc['total'] = 0;
-
-        // AGREGA LAS CUENTAS DE DETALLE
-        foreach ($accountings as $value) {
-            $acc['id'] = $value->id;
-            $acc['codigo'] = $value->code;
-            $acc['cuenta'] = $value->name;
-            $acc['padre'] = $value->parent_id;
-            $acc['nivel'] = $value->level;
-
-            // OPERACION DEPENDIENDO LA NATURALEZA DE LA CUENTA (DEUDORA O ACREEDORA)
-            if ($value->account_type_id == 1) {
-                $acc['total'] = floatval($value->total_debe) - floatval($value->total_haber);
-            } else {
-                $acc['total'] = floatval($value->total_haber) - floatval($value->total_debe);
-            }
-
-            if ($acc['total'] != 0) {
-                $impuestos[] = $acc;
-            }
-        }
-
-
-        // CALCULA LOS TOTALES DE LAS CUENTAS DE GRUPO
-        // for ($i = $this->level_global - 1; $i >= 1; $i--) { 
-        //     foreach ($cuentas_impuestos as $value) {
-        //         if ($value->level == $i)  {
-        //             $acc['id'] = $value->id;
-        //             $acc['codigo'] = $value->code;
-        //             $acc['cuenta'] = $value->name;
-        //             $acc['padre'] = $value->parent_id;
-        //             $acc['nivel'] = $value->level;
-        //             $acc['total'] = 0;
-
-        //             foreach ($impuestos as $v) {
-        //                 if ($v['padre'] == $value->id) {
-        //                     $acc['total'] += $v['total'];
-        //                 }
-        //             }
-
-        //             if ($acc['total'] != 0) {
-        //                 $impuestos[] = $acc;
-        //             }
-
-        //         }
-        //     }
-        // }
-        // $impuestos = $this->sort($impuestos);
-        return $impuestos;
-    }
-
-    // ORDENA LOS ARREGLOS DE LAS CUENTAS
-    function sort(array $arr)
-    {
-        $sorted_array = [];
-
-        foreach ($arr as $a) {
-            if ($a['nivel'] == 1) {
-                $ac['id'] = $a['id'];
-                $ac['codigo'] = $a['codigo'];
-                $ac['cuenta'] = $a['cuenta'];
-                $ac['padre'] = $a['padre'];
-                $ac['nivel'] = $a['nivel'];
-                $ac['total'] = $a['total'];
-                $sorted_array[] = $ac;
-
-                $ac = [];
-                foreach ($arr as $b) {
-                    if ($b['nivel'] == 2 && $b['padre'] == $a['id']) {
-                        $ac['id'] = $b['id'];
-                        $ac['codigo'] = $b['codigo'];
-                        $ac['cuenta'] = $b['cuenta'];
-                        $ac['padre'] = $b['padre'];
-                        $ac['nivel'] = $b['nivel'];
-                        $ac['total'] = $b['total'];
-
-                        $sorted_array[] = $ac;
-
-                        $ac = [];
-                        foreach ($arr as $c) {
-                            if ($c['nivel'] == 3 && $c['padre'] == $b['id']) {
-                                $ac['id'] = $c['id'];
-                                $ac['codigo'] = $c['codigo'];
-                                $ac['cuenta'] = $c['cuenta'];
-                                $ac['padre'] = $c['padre'];
-                                $ac['nivel'] = $c['nivel'];
-                                $ac['total'] = $c['total'];
-                                $sorted_array[] = $ac;
-
-                                foreach ($arr as $d) {
-                                    if ($d['nivel'] == 4 && $d['padre'] == $c['id']) {
-                                        $ac['id'] = $d['id'];
-                                        $ac['codigo'] = $d['codigo'];
-                                        $ac['cuenta'] = $d['cuenta'];
-                                        $ac['padre'] = $d['padre'];
-                                        $ac['nivel'] = $d['nivel'];
-                                        $ac['total'] = $d['total'];
-
-                                        $sorted_array[] = $ac;
-                                        $ac = [];
-                                    }
-
-                                    if ($this->level_global > 4) {
-                                        foreach ($arr as $e) {
-                                            if ($e['nivel'] == 5 && $e['padre'] == $d['id']) {
-                                                $ac['id'] = $e['id'];
-                                                $ac['codigo'] = $e['codigo'];
-                                                $ac['cuenta'] = $e['cuenta'];
-                                                $ac['padre'] = $e['padre'];
-                                                $ac['nivel'] = $e['nivel'];
-                                                $ac['total'] = $e['total'];
-
-                                                $sorted_array[] = $ac;
-                                                $ac = [];
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return $sorted_array;
     }
 }

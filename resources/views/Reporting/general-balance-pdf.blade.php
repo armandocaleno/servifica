@@ -34,6 +34,15 @@
             left: -15px;         
         }
 
+        .group {
+            font-style: bold;
+            text-transform: uppercase;
+        }
+
+        .detail {
+            text-transform: capitalize;
+            font-style: italic;
+        }
 
         #signatures tr td{
             width: 50%;
@@ -76,12 +85,19 @@
                             if ($item['nivel'] == 1) {
                                 $total_activo = $item['total'];
                             }
+
+                            $styles = 'detail';
+                            if ($item['grupo']) {
+                                $styles = 'group';
+                            }
                         @endphp
-                        <tr>
-                            <td class=" w-28">{{ $item['codigo'] }}</td>
-                            <td class=" lowercase">{{ $item['cuenta'] }}</td>
-                            <td class=" text-right">$ {{ number_format($item['total'], 2) }}</td>
-                        </tr>
+                        @if ($item['nivel'] <= $level)
+                            <tr class="{{ $styles }}">
+                                <td class="w-28">{{ $item['codigo'] }}</td>
+                                <td >{{ $item['cuenta'] }}</td>
+                                <td class="text-right">$ {{ number_format($item['total'], 2) }}</td>
+                            </tr>
+                        @endif
                     @endforeach
                 </tbody>
                 <tfoot>
@@ -112,12 +128,19 @@
                             if ($item['nivel'] == 1) {
                                 $total_pasivo = $item['total'];
                             }
+
+                            $styles = 'detail';
+                            if ($item['grupo']) {
+                                $styles = 'group';
+                            }
                         @endphp
-                        <tr class="">
-                            <td class=" w-28">{{ $item['codigo'] }}</td>
-                            <td class=" lowercase">{{ $item['cuenta'] }}</td>
-                            <td class=" text-right">$ {{ number_format($item['total'], 2) }}</td>
-                        </tr>
+                        @if ($item['nivel'] <= $level)
+                            <tr class="{{ $styles }}">
+                                <td class="w-28">{{ $item['codigo'] }}</td>
+                                <td >{{ $item['cuenta'] }}</td>
+                                <td class="text-right">$ {{ number_format($item['total'], 2) }}</td>
+                            </tr>
+                        @endif
                     @endforeach
                 </tbody>
                 <tfoot>
@@ -148,12 +171,20 @@
                             if ($item['nivel'] == 1) {
                                 $total_patrimonio = $item['total'];
                             }
+
+                            $styles = 'detail';
+                            if ($item['grupo']) {
+                                $styles = 'group';
+                            }
                         @endphp
-                        <tr class="">
-                            <td class=" w-28">{{ $item['codigo'] }}</td>
-                            <td class=" lowercase">{{ $item['cuenta'] }}</td>
-                            <td class=" text-right">$ {{ number_format($item['total'], 2) }}</td>
-                        </tr>
+                        
+                        @if ($item['nivel'] <= $level)
+                            <tr class="{{ $styles }}">
+                                <td class="w-28">{{ $item['codigo'] }}</td>
+                                <td >{{ $item['cuenta'] }}</td>
+                                <td class="text-right">$ {{ number_format($item['total'], 2) }}</td>
+                            </tr>
+                        @endif
                     @endforeach
                 </tbody>
                 <tfoot>
