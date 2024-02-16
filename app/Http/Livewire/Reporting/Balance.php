@@ -331,80 +331,80 @@ class Balance extends Component
     // ORDENA LOS ARREGLOS DE LAS CUENTAS
     function sort(array $arr) {
         $sorted_array = [];
+        $sorted_array = collect($arr)->sortBy('code',SORT_REGULAR, true)->sortBy('padre')->toArray();
+    //     foreach ($arr as $a) {
+    //        if ($a['nivel'] == 1) {
+    //            $ac['id'] = $a['id'];
+    //            $ac['codigo'] = $a['codigo'];
+    //            $ac['cuenta'] = $a['cuenta'];
+    //            $ac['padre'] = $a['padre'];
+    //            $ac['nivel'] = $a['nivel'];
+    //            $ac['total'] = $a['total'];
+    //            $ac['grupo'] = $a['grupo'];
+    //            $sorted_array[] = $ac;
 
-        foreach ($arr as $a) {
-           if ($a['nivel'] == 1) {
-               $ac['id'] = $a['id'];
-               $ac['codigo'] = $a['codigo'];
-               $ac['cuenta'] = $a['cuenta'];
-               $ac['padre'] = $a['padre'];
-               $ac['nivel'] = $a['nivel'];
-               $ac['total'] = $a['total'];
-               $ac['grupo'] = $a['grupo'];
-               $sorted_array[] = $ac;
+    //            $ac = [];
+    //            foreach ($arr as $b) {
+    //                if ($b['nivel'] == 2 && $b['padre'] == $a['id']) {
+    //                    $ac['id'] = $b['id'];
+    //                    $ac['codigo'] = $b['codigo'];
+    //                    $ac['cuenta'] = $b['cuenta'];
+    //                    $ac['padre'] = $b['padre'];
+    //                    $ac['nivel'] = $b['nivel'];
+    //                    $ac['total'] = $b['total'];
+    //                    $ac['grupo'] = $b['grupo'];
 
-               $ac = [];
-               foreach ($arr as $b) {
-                   if ($b['nivel'] == 2 && $b['padre'] == $a['id']) {
-                       $ac['id'] = $b['id'];
-                       $ac['codigo'] = $b['codigo'];
-                       $ac['cuenta'] = $b['cuenta'];
-                       $ac['padre'] = $b['padre'];
-                       $ac['nivel'] = $b['nivel'];
-                       $ac['total'] = $b['total'];
-                       $ac['grupo'] = $b['grupo'];
-
-                       $sorted_array[] = $ac;
+    //                    $sorted_array[] = $ac;
                        
-                       $ac = [];
-                       foreach ($arr as $c) {
-                           if ($c['nivel'] == 3 && $c['padre'] == $b['id']) {
-                               $ac['id'] = $c['id'];
-                               $ac['codigo'] = $c['codigo'];
-                               $ac['cuenta'] = $c['cuenta'];
-                               $ac['padre'] = $c['padre'];
-                               $ac['nivel'] = $c['nivel'];
-                               $ac['total'] = $c['total'];
-                               $ac['grupo'] = $c['grupo'];
-                               $sorted_array[] = $ac;
+    //                    $ac = [];
+    //                    foreach ($arr as $c) {
+    //                        if ($c['nivel'] == 3 && $c['padre'] == $b['id']) {
+    //                            $ac['id'] = $c['id'];
+    //                            $ac['codigo'] = $c['codigo'];
+    //                            $ac['cuenta'] = $c['cuenta'];
+    //                            $ac['padre'] = $c['padre'];
+    //                            $ac['nivel'] = $c['nivel'];
+    //                            $ac['total'] = $c['total'];
+    //                            $ac['grupo'] = $c['grupo'];
+    //                            $sorted_array[] = $ac;
                
-                               foreach ($arr as $d) {
-                                   if ($d['nivel'] == 4 && $d['padre'] == $c['id']) {
-                                       $ac['id'] = $d['id'];
-                                       $ac['codigo'] = $d['codigo'];
-                                       $ac['cuenta'] = $d['cuenta'];
-                                       $ac['padre'] = $d['padre'];
-                                       $ac['nivel'] = $d['nivel'];
-                                       $ac['total'] = $d['total'];
-                                       $ac['grupo'] = $d['grupo'];
+    //                            foreach ($arr as $d) {
+    //                                if ($d['nivel'] == 4 && $d['padre'] == $c['id']) {
+    //                                    $ac['id'] = $d['id'];
+    //                                    $ac['codigo'] = $d['codigo'];
+    //                                    $ac['cuenta'] = $d['cuenta'];
+    //                                    $ac['padre'] = $d['padre'];
+    //                                    $ac['nivel'] = $d['nivel'];
+    //                                    $ac['total'] = $d['total'];
+    //                                    $ac['grupo'] = $d['grupo'];
                
-                                       $sorted_array[] = $ac;
-                                       $ac = [];
-                                   }
+    //                                    $sorted_array[] = $ac;
+    //                                    $ac = [];
+    //                                }
 
-                                   if ($this->level_global > 4) {
-                                       foreach ($arr as $e) {
-                                           if ($e['nivel'] == 5 && $e['padre'] == $d['id']) {
-                                               $ac['id'] = $e['id'];
-                                               $ac['codigo'] = $e['codigo'];
-                                               $ac['cuenta'] = $e['cuenta'];
-                                               $ac['padre'] = $e['padre'];
-                                               $ac['nivel'] = $e['nivel'];
-                                               $ac['total'] = $e['total'];
-                                               $ac['grupo'] = $e['grupo'];
+    //                                if ($this->level_global > 4) {
+    //                                    foreach ($arr as $e) {
+    //                                        if ($e['nivel'] == 5 && $e['padre'] == $d['id']) {
+    //                                            $ac['id'] = $e['id'];
+    //                                            $ac['codigo'] = $e['codigo'];
+    //                                            $ac['cuenta'] = $e['cuenta'];
+    //                                            $ac['padre'] = $e['padre'];
+    //                                            $ac['nivel'] = $e['nivel'];
+    //                                            $ac['total'] = $e['total'];
+    //                                            $ac['grupo'] = $e['grupo'];
                        
-                                               $sorted_array[] = $ac;
-                                               $ac = [];
-                                           }
-                                       }
-                                   }
-                               }
-                           }
-                       }
-                   }
-               }
-           }
-       }
+    //                                            $sorted_array[] = $ac;
+    //                                            $ac = [];
+    //                                        }
+    //                                    }
+    //                                }
+    //                            }
+    //                        }
+    //                    }
+    //                }
+    //            }
+    //        }
+    //    }
 
        return $sorted_array;
    }

@@ -42,41 +42,41 @@ class Create extends Component
             $this->total_debe = "0.00";
             $this->total_haber = "0.00";
             $this->value = "0.00";
-        }else {
+        } else {
             $accountings = $this->expense->journal->details;
-            
-            foreach ($accountings as $item ) {
+            $account_expenses_tax = AccountingConfig::where('name', 'iva_compras')->first()->accounting_id;
+
+            foreach ($accountings as $item) {
                 if ($item->debit_value > 0) {
-                    $accounting = Accounting::find($item->accounting_id);
-                    Cart::instance('old_journal')->add([
-                        'id' => $item->id,
-                        'name' =>$accounting->code . " " . $accounting->name,
-                        'qty' => 1,
-                        'price' => $item->debit_value,
-                        'weight' => 100
-                    ]); 
-                    
-                    Cart::instance('new_journal')->add([
-                        'id' => $item->id,
-                        'name' =>$accounting->code . " " . $accounting->name,
-                        'qty' => 1,
-                        'price' => $item->debit_value,
-                        'weight' => 100
-                    ]); 
+                    if ($item->accounting_id != $account_expenses_tax) {
+                        $accounting = Accounting::find($item->accounting_id);
+                        Cart::instance('old_journal')->add([
+                            'id' => $item->accounting_id,
+                            'name' => $accounting->code . " " . $accounting->name,
+                            'qty' => 1,
+                            'price' => $item->debit_value,
+                            'weight' => 100
+                        ]);
+
+                        Cart::instance('new_journal')->add([
+                            'id' => $item->accounting_id,
+                            'name' => $accounting->code . " " . $accounting->name,
+                            'qty' => 1,
+                            'price' => $item->debit_value,
+                            'weight' => 100
+                        ]);
+                    }
                 }
             }
         }
-
-        //  dd($this->expense);
-
     }
 
     public function render()
     {
         $accountings = Accounting::where('company_id', session('company')->id)
-                                    ->where('group', '0')
-                                    ->orderBy('code')->get();
-                                    
+            ->where('group', '0')
+            ->orderBy('code')->get();
+
         $suppliers = Supplier::where('company_id', session('company')->id)->get();
 
         return view('livewire.expenses.create', compact('accountings', 'suppliers'));
@@ -85,39 +85,39 @@ class Create extends Component
     public function addAccount()
     {
         if ($this->value == 0) {
-            $this->info('Monto incorrecto!');    
+            $this->info('Monto incorrecto!');
             return;
         }
 
         if ($this->account_id < 1) {
-            $this->info('Seleccione una cuenta primero.');    
+            $this->info('Seleccione una cuenta primero.');
             return;
-        }       
+        }
 
         $accounting = Accounting::find($this->account_id);
 
         $newcart = Cart::instance('new_journal')->add([
             'id' => $accounting->id,
-            'name' =>$accounting->code . " - " . $accounting->name,
+            'name' => $accounting->code . " - " . $accounting->name,
             'qty' => 1,
             'price' => $this->value,
             'weight' => 100,
             'options' => ['type' => $this->type]
-        ]);                   
-        
+        ]);
+
         if ($this->iva) {
-            Cart::instance('new_journal')->setTax($newcart->rowId,12);
-            
-        }else {
-            Cart::instance('new_journal')->setTax($newcart->rowId,0);
+            Cart::instance('new_journal')->setTax($newcart->rowId, 12);
+        } else {
+            Cart::instance('new_journal')->setTax($newcart->rowId, 0);
         }
+
         $this->expense->tax = Cart::instance('new_journal')->tax(2, '.', '');
         $this->total_haber = $this->total_haber + $this->value;
         $this->expense->total = Cart::instance('new_journal')->total(2, '.', '');
 
-        $this->value = "0.00";  
-        $this->iva = false;   
-    }  
+        $this->value = "0.00";
+        $this->iva = false;
+    }
 
     public function unsetAccount($rowID)
     {
@@ -128,17 +128,17 @@ class Create extends Component
     }
 
     public function save()
-    {   
+    {
         $this->validate();
-    
+
         $account_expenses_tax = AccountingConfig::where('name', 'iva_compras')->first()->accounting_id;
         $account_expenses = AccountingConfig::where('name', 'gastos')->first()->accounting_id;
 
         if ($account_expenses_tax == null || $account_expenses == null) {
-            $this->info('No se han configurado las cuentas de gastos.'); 
+            $this->info('No se han configurado las cuentas de gastos.');
             return;
         }
-        
+
         DB::beginTransaction();
 
         try {
@@ -153,38 +153,63 @@ class Create extends Component
 
                 // ELIMINA LAS CUENTAS DEL HABER Y ACTUALIZA LAS DEL DEBE
                 foreach ($this->expense->journal->details as $value) {
-                    if ($value->credit_value > 0) {
-                        JournalDetail::find($value->id)->delete();
-                    }else {
-                        if ($value->accounting_id == 1) {
-                            $value->update([
-                                'debit_value' => $this->expense->total,
-                            ]);
-                        }else {
-                            $value->update([
-                                'debit_value' => $this->expense->tax,
-                            ]);
-                        }
-                    }
+                    // if ($value->debit_value > 0) {
+                    JournalDetail::find($value->id)->delete();
+                    // }else {
+                    //     if ($value->accounting_id == 1) {
+                    //         $value->update([
+                    //             'debit_value' => $this->expense->total,
+                    //         ]);
+                    //     }else {
+                    //         $value->update([
+                    //             'debit_value' => $this->expense->tax,
+                    //         ]);
+                    //     }
+                    // }
                 }
 
                 // INGRESA LAS NUEVAS CUENTAS DEL HABER
+                // foreach (Cart::instance('new_journal')->content() as $item) {
+                //     JournalDetail::create([
+                //         'journal_id' => $this->expense->journal->id,
+                //         'accounting_id' => $item->id,
+                //         'debit_value' => 0,
+                //         'credit_value' => $item->price
+                //     ]);
+                // }
+
+                JournalDetail::create([
+                    'journal_id' => $this->expense->journal->id,
+                    'accounting_id' => $account_expenses,
+                    'debit_value' => 0,
+                    'credit_value' => $this->expense->total
+                ]);
+
+                if ($this->expense->tax > 0) {
+                    JournalDetail::create([
+                        'journal_id' => $this->expense->journal->id,
+                        'accounting_id' => $account_expenses_tax,
+                        'debit_value' => $this->expense->tax,
+                        'credit_value' => 0
+                    ]);
+                }
+                // dd(Cart::instance('new_journal')->content());
                 foreach (Cart::instance('new_journal')->content() as $item) {
                     JournalDetail::create([
                         'journal_id' => $this->expense->journal->id,
                         'accounting_id' => $item->id,
-                        'debit_value' => 0,
-                        'credit_value' => $item->price
+                        'debit_value' => $item->price,
+                        'credit_value' => 0
                     ]);
                 }
-            }else {
+            } else {
 
                 $invoice = Expense::where('supplier_id', $this->expense->suppliers->id)
-                                    ->where('number', $this->expense->number)->get();
+                    ->where('number', $this->expense->number)->get();
 
-                
+
                 if (count($invoice)) {
-                    $this->info('Ya existe una factura con este número de este proveedor.'); 
+                    $this->info('Ya existe una factura con este número de este proveedor.');
                     return;
                 }
 
@@ -199,7 +224,7 @@ class Create extends Component
                     'auth_number' => $this->expense->auth_number,
                     'company_id' => session('company')->id
                 ]);
-                
+
                 // CREA ASIENTO CONTABLE
                 $journal = Journal::create([
                     'number' => $this->GenjournalNumber(),
@@ -243,13 +268,11 @@ class Create extends Component
             $this->success('Guardado exitosamente.');
 
             return redirect()->route('expenses.index');
-
         } catch (\Throwable $th) {
             DB::rollback();
             $this->info('Hubo un error y no se guardó la compra.');
             $this->info($th->getMessage());
         }
-       
     }
 
     public function resetControls()
@@ -262,34 +285,35 @@ class Create extends Component
         $this->expense = new Expense();
         $this->expense->date = Carbon::now()->format('Y-m-d');
         $this->expense->total = "0.00";
-
     }
 
-     //Generar el número de transacción
-     public function GenjournalNumber()
-     {                
-         $j = new Journal();
-         $number = $j->getNumber();
-         return $number;
-     }     
- 
-     // Mensaje de confirmación de acción
-     public function success($message)
-     {
-         $this->dispatchBrowserEvent('success', 
-             [
-                 'message' => $message,                       
-             ]
-         );       
-     }
- 
-     // Mensaje de información
-     public function info($message)
-     {
-         $this->dispatchBrowserEvent('info', 
-             [
-                 'message' => $message,                       
-             ]
-         );       
-     }
+    //Generar el número de transacción
+    public function GenjournalNumber()
+    {
+        $j = new Journal();
+        $number = $j->getNumber();
+        return $number;
+    }
+
+    // Mensaje de confirmación de acción
+    public function success($message)
+    {
+        $this->dispatchBrowserEvent(
+            'success',
+            [
+                'message' => $message,
+            ]
+        );
+    }
+
+    // Mensaje de información
+    public function info($message)
+    {
+        $this->dispatchBrowserEvent(
+            'info',
+            [
+                'message' => $message,
+            ]
+        );
+    }
 }
