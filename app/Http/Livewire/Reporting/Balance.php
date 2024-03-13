@@ -331,7 +331,7 @@ class Balance extends Component
     // ORDENA LOS ARREGLOS DE LAS CUENTAS
     function sort(array $arr) {
         $sorted_array = [];
-        $sorted_array = collect($arr)->sortBy('code',SORT_REGULAR, true)->sortBy('padre')->toArray();
+        $sorted_array = collect($arr)->sortBy('codigo', SORT_STRING)->toArray();
     //     foreach ($arr as $a) {
     //        if ($a['nivel'] == 1) {
     //            $ac['id'] = $a['id'];
@@ -405,7 +405,7 @@ class Balance extends Component
     //            }
     //        }
     //    }
-
+        // $sorted_array = $arr;
        return $sorted_array;
    }
 }
